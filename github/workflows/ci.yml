@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [ dev, main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (Release)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ bison flex graphviz libfl-dev
+
+      - name: Cache CMake deps
+        uses: actions/cache@v4
+        with:
+          path: build-release/_deps
+          key: ${{ runner.os }}-release-${{ hashFiles('**/CMakeLists.txt', '.github/workflows/ci.yml') }}
+
+      - name: Configure
+        run: cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build-release --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build-release --output-on-failure --timeout 120
+
+  tests-sanitizers:
+      name: Tests (Sanitizers, Debug)
+      runs-on: ubuntu-latest
+      needs: tests
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Install deps
+          run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ bison flex graphviz libfl-dev
+
+        - name: Cache CMake deps
+          uses: actions/cache@v4
+          with:
+            path: build-sanitizers/_deps
+            key: ${{ runner.os }}-sanitizers-${{ hashFiles('**/CMakeLists.txt', '.github/workflows/ci.yml') }}
+
+        - name: Configure
+          run: cmake -S . -B build-sanitizers -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+        - name: Build
+          run: cmake --build build-sanitizers --parallel
+
+        - name:  Run tests
+          env:
+            ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1
+            UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          run: ctest --test-dir build-sanitizers --output-on-failure --timeout 120

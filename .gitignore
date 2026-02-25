@@ -1,0 +1,8 @@
+dump/
+build/
+.vscode
+*.out
+*.dot
+*.png
+compile_commands.json
+.cache
