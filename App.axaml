@@ -1,0 +1,115 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:AudioStemPlayer"
+             x:Class="AudioStemPlayer.App"
+             RequestedThemeVariant="Default">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+
+                <ResourceDictionary x:Key="Light">
+
+                    <Color x:Key="WindowBackgroundColor">#FFFFFF</Color>
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
+                    
+                    
+                    <Color x:Key="TabsBackgroundColor">#F8F8F8</Color>
+                    <SolidColorBrush x:Key="TabsBackgroundBrush" Color="{StaticResource TabsBackgroundColor}"/>
+                    
+                    
+                    <Color x:Key="TextColor">#1E1E1E</Color>
+                    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+
+                    <Color x:Key="HoverBackgroundColor">#E0E0E0</Color>
+                    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="{StaticResource HoverBackgroundColor}"/>
+                    
+                    <Color x:Key="HoverColor">#E0E0E0</Color>
+                    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}"/>
+                    
+                    
+                    
+                    <Color x:Key="AccentColor">#2962D9</Color>
+                    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+
+                    <Color x:Key="AccentHoverColor">#1C8CD8</Color>
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}"/>
+
+                    <Color x:Key="AccentPressedColor">#005A9E</Color>
+                    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressedColor}"/>
+
+                    <SolidColorBrush x:Key="AccentForegroundBrush" Color="White"/>
+                    
+                    
+
+                    <Color x:Key="SeparatorColor">#C0C0C0</Color>
+                    <SolidColorBrush x:Key="SeparatorBrush" Color="{StaticResource SeparatorColor}"/>
+
+                    <Color x:Key="ButtonBackgroundColor">#F0F0F0</Color>
+                    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="{StaticResource ButtonBackgroundColor}"/>
+
+                    <Color x:Key="ButtonBorderColor">#A0A0A0</Color>
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource ButtonBorderColor}"/>
+
+                    <Color x:Key="ButtonHoverBackgroundColor">#E0E0E0</Color>
+                    <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="{StaticResource ButtonHoverBackgroundColor}"/>
+                </ResourceDictionary>
+                
+                <ResourceDictionary x:Key="Dark">
+
+                    <Color x:Key="WindowBackgroundColor">#1E1E1E</Color>
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{StaticResource WindowBackgroundColor}"/>
+                    
+                    
+                    <Color x:Key="TabsBackgroundColor">#141414</Color>
+                    <SolidColorBrush x:Key="TabsBackgroundBrush" Color="{StaticResource TabsBackgroundColor}"/>
+
+                    <Color x:Key="TextColor">#F5F5F7</Color>
+                    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}"/>
+
+                    <Color x:Key="HoverBackgroundColor">#3E3E42</Color>
+                    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="{StaticResource HoverBackgroundColor}"/>
+                    
+                    <Color x:Key="HoverColor">#3E3E42</Color>
+                    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}"/>
+                    
+                    <Color x:Key="AccentColor">#2458CA</Color>
+                    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+
+                    <Color x:Key="AccentHoverColor">#2458CA</Color>
+                    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}"/>
+
+                    <Color x:Key="AccentPressedColor">#0071E3</Color>
+                    <SolidColorBrush x:Key="AccentPressedBrush" Color="{StaticResource AccentPressedColor}"/>
+
+                    <SolidColorBrush x:Key="AccentForegroundBrush" Color="White"/>
+                    
+                    
+                    <Color x:Key="SeparatorColor">#5A5A5A</Color>
+                    <SolidColorBrush x:Key="SeparatorBrush" Color="{StaticResource SeparatorColor}"/>
+
+                    <Color x:Key="ButtonBackgroundColor">#3E3E42</Color>
+                    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="{StaticResource ButtonBackgroundColor}"/>
+
+                    <Color x:Key="ButtonBorderColor">#5A5A5A</Color>
+                    <SolidColorBrush x:Key="ButtonBorderBrush" Color="{StaticResource ButtonBorderColor}"/>
+
+                    <Color x:Key="ButtonHoverBackgroundColor">#505050</Color>
+                    <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="{StaticResource ButtonHoverBackgroundColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    
+
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://AudioStemPlayer/UI/Resources/Styles.axaml"/>
+    </Application.Styles>
+</Application>
+
+

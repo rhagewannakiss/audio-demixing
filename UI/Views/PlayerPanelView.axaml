@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+             x:Class="AudioStemPlayer.UI.Views.PlayerPanelView"
+             x:DataType="vm:PlayerPanelViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+    
+    <StackPanel Spacing="10" Margin="10">
+        <TextBlock Text="" 
+                   Foreground="{DynamicResource TextBrush}" 
+                   TextWrapping="Wrap"/>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
+            <Button Content="▶" 
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    IsEnabled="True"/>
+            
+            <Button Content="⏹"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    IsEnabled="True"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="{Binding Position, StringFormat={}{0:F1}s}" 
+                       Foreground="{DynamicResource TextBrush}" Width="50"/>
+            <Slider Minimum="0" Maximum="" 
+                    Value="{Binding Position}" Width="150"/>
+            <TextBlock Text="" 
+                       Foreground="{DynamicResource TextBrush}" Width="50"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Spacing="5">
+            <TextBlock Text="Volume:" Foreground="{DynamicResource TextBrush}"/>
+            <Slider Minimum="0" Maximum="100" Value="{Binding Volume}" Width="100"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
