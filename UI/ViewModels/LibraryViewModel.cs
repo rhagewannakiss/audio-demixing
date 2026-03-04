@@ -12,6 +12,7 @@ public partial class LibraryViewModel : ViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly IMetadataReader _metadataReader;
+    private readonly ILibraryService _libraryService;
 
     [ObservableProperty]
     private TrackInfo? _selectedTrack;
@@ -21,10 +22,24 @@ public partial class LibraryViewModel : ViewModelBase
 
     public event Action<string>? TrackSelected;
 
-    public LibraryViewModel(IFileService fileService, IMetadataReader metadataReader)
+    public LibraryViewModel(IFileService fileService, IMetadataReader metadataReader, ILibraryService libraryService)
     {
         _fileService = fileService;
         _metadataReader = metadataReader;
+        _libraryService = libraryService;
+
+        Task.Run(LoadTracksAsync);
+    }
+
+    private async Task LoadTracksAsync()
+    {
+        var tracks = await _libraryService.LoadTracksAsync();
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            Tracks.Clear();
+            foreach (var track in tracks)
+                Tracks.Add(track);
+        });
     }
 
     partial void OnSelectedTrackChanged(TrackInfo? value)
@@ -43,6 +58,7 @@ public partial class LibraryViewModel : ViewModelBase
         {
             var track = await _metadataReader.ReadAsync(path);
             Tracks.Add(track);
+            await _libraryService.AddTrackAsync(track);
             SelectedTrack = track;
         }
     }
