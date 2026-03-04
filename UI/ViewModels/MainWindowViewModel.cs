@@ -1,14 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.Generic;
-using AudioStemPlayer.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using AudioStemPlayer.Core.Services;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly IFileService _fileService;
+    private readonly AudioPlayerService _audioPlayer;
+    private readonly IMetadataReader _metadataReader;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -22,15 +24,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private PlayerPanelViewModel _playerPanelViewModel;
 
-    public List<PageType> PageTypes { get; } = [ PageType.Library ];
-
     public MainWindowViewModel(IFileService fileService)
     {
         _fileService = fileService;
-        PlayerPanelViewModel = new PlayerPanelViewModel();
+        _audioPlayer = new AudioPlayerService();
+        _metadataReader = new MetadataReader();
+        _playerPanelViewModel = new PlayerPanelViewModel(_audioPlayer);
         SelectedPage = PageType.Library;
-
-        
         UpdateCurrentPage();
     }
 
@@ -41,10 +41,21 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateCurrentPage()
     {
-        CurrentPageViewModel = SelectedPage switch
+        if (SelectedPage == PageType.Library)
         {
-            PageType.Library => new LibraryViewModel(_fileService),
-            _ => null
-        };
+            var libraryVm = new LibraryViewModel(_fileService, _metadataReader);
+            libraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
+            CurrentPageViewModel = libraryVm;
+        }
+        else
+        {
+            CurrentPageViewModel = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        _playerPanelViewModel.Dispose();
+        _audioPlayer.Dispose();
     }
 }
