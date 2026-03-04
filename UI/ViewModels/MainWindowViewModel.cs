@@ -3,14 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using AudioStemPlayer.Core.Services;
+using TagLib;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly IFileService _fileService;
-    private readonly AudioPlayerService _audioPlayer;
+    private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
+    private readonly ILibraryService _libraryService;
+    private LibraryViewModel? _cachedLibraryVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -29,6 +32,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _fileService = fileService;
         _audioPlayer = new AudioPlayerService();
         _metadataReader = new MetadataReader();
+        _libraryService = new JsonLibraryService();
         _playerPanelViewModel = new PlayerPanelViewModel(_audioPlayer);
         SelectedPage = PageType.Library;
         UpdateCurrentPage();
@@ -43,9 +47,12 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (SelectedPage == PageType.Library)
         {
-            var libraryVm = new LibraryViewModel(_fileService, _metadataReader);
-            libraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
-            CurrentPageViewModel = libraryVm;
+            if (_cachedLibraryVm == null)
+            {
+                _cachedLibraryVm = new LibraryViewModel(_fileService, _metadataReader, _libraryService);
+                _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
+            }
+            CurrentPageViewModel = _cachedLibraryVm;
         }
         else
         {
