@@ -43,7 +43,7 @@
                  Margin="0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}"
+                    <TextBlock Text="{Binding DisplayName}"
                                Foreground="{DynamicResource TextBrush}"
                                Margin="10,5" />
                 </DataTemplate>
