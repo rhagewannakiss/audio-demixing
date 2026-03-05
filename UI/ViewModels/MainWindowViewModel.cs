@@ -1,20 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
-using AudioStemPlayer.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    private readonly IFileService _fileService;
-    private readonly IAudioPlayerService _audioPlayer;
-    private readonly IMetadataReader _metadataReader;
-    private readonly ILibraryService _libraryService;
     private readonly IServiceProvider _serviceProvider;
     private readonly PlayerPanelViewModel _playerPanelViewModel;
     private LibraryViewModel? _cachedLibraryVm;
+    private DemixingViewModel? _cachedDemixingVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -27,18 +23,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public PlayerPanelViewModel PlayerPanelViewModel => _playerPanelViewModel;
 
-    public MainWindowViewModel(
-        IFileService fileService,
-        IAudioPlayerService audioPlayer,
-        IMetadataReader metadataReader,
-        ILibraryService libraryService,
-        IServiceProvider serviceProvider,
-        PlayerPanelViewModel playerPanelViewModel)
+    public MainWindowViewModel(IServiceProvider serviceProvider, PlayerPanelViewModel playerPanelViewModel)
     {
-        _fileService = fileService;
-        _audioPlayer = audioPlayer;
-        _metadataReader = metadataReader;
-        _libraryService = libraryService;
         _serviceProvider = serviceProvider;
         _playerPanelViewModel = playerPanelViewModel;
 
@@ -53,6 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void UpdateCurrentPage()
     {
+        
         if (SelectedPage == PageType.Library)
         {
             if (_cachedLibraryVm == null)
@@ -61,6 +48,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
             }
             CurrentPageViewModel = _cachedLibraryVm;
+        }
+        else if (SelectedPage == PageType.Demixing)
+        {
+            if (_cachedDemixingVm == null)
+            {
+                _cachedDemixingVm = _serviceProvider.GetRequiredService<DemixingViewModel>();
+                
+            }
+            CurrentPageViewModel = _cachedDemixingVm;
         }
         else
         {

@@ -31,9 +31,11 @@ public partial class App : Application
             services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
             services.AddSingleton<IMetadataReader, MetadataReader>();
             services.AddSingleton<ILibraryService, JsonLibraryService>();
+            services.AddSingleton<IDemixingService, DemixingService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
+            services.AddSingleton<DemixingViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 
             _services = services.BuildServiceProvider();
