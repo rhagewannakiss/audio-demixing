@@ -4,5 +4,6 @@ public enum PageType
 {
     Library,
     History,
+    Demixing,
     Settings
 }
