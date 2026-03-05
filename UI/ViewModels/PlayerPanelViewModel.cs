@@ -139,6 +139,5 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     {
         _audioPlayer.PositionChanged -= OnPositionChanged;
         _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
-        _audioPlayer.Dispose();
     }
 }

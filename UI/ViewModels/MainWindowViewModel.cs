@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using AudioStemPlayer.Core.Services;
-using TagLib;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
@@ -13,6 +12,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
     private readonly ILibraryService _libraryService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly PlayerPanelViewModel _playerPanelViewModel;
     private LibraryViewModel? _cachedLibraryVm;
 
     [ObservableProperty]
@@ -24,16 +25,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private ObservableCollection<PageType> _pages = new(Enum.GetValues<PageType>());
 
-    [ObservableProperty]
-    private PlayerPanelViewModel _playerPanelViewModel;
+    public PlayerPanelViewModel PlayerPanelViewModel => _playerPanelViewModel;
 
-    public MainWindowViewModel(IFileService fileService)
+    public MainWindowViewModel(
+        IFileService fileService,
+        IAudioPlayerService audioPlayer,
+        IMetadataReader metadataReader,
+        ILibraryService libraryService,
+        IServiceProvider serviceProvider,
+        PlayerPanelViewModel playerPanelViewModel)
     {
         _fileService = fileService;
-        _audioPlayer = new AudioPlayerService();
-        _metadataReader = new MetadataReader();
-        _libraryService = new JsonLibraryService();
-        _playerPanelViewModel = new PlayerPanelViewModel(_audioPlayer);
+        _audioPlayer = audioPlayer;
+        _metadataReader = metadataReader;
+        _libraryService = libraryService;
+        _serviceProvider = serviceProvider;
+        _playerPanelViewModel = playerPanelViewModel;
+
         SelectedPage = PageType.Library;
         UpdateCurrentPage();
     }
@@ -49,7 +57,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             if (_cachedLibraryVm == null)
             {
-                _cachedLibraryVm = new LibraryViewModel(_fileService, _metadataReader, _libraryService);
+                _cachedLibraryVm = _serviceProvider.GetRequiredService<LibraryViewModel>();
                 _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
             }
             CurrentPageViewModel = _cachedLibraryVm;
@@ -62,7 +70,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        _playerPanelViewModel.Dispose();
-        _audioPlayer.Dispose();
+
     }
 }
