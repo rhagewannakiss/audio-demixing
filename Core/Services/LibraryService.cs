@@ -11,7 +11,8 @@ public class JsonLibraryService : ILibraryService
 {
     private readonly string _filePath;
     private List<TrackInfo> _tracks = new();
-
+    public event EventHandler? LibraryChanged;
+    
     public JsonLibraryService()
     {
         string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -42,6 +43,7 @@ public class JsonLibraryService : ILibraryService
     {
         _tracks.Add(track);
         await SaveTracksAsync(_tracks);
+        LibraryChanged?.Invoke(this, EventArgs.Empty); 
     }
 
     public Task RemoveTrackAsync(string filePath)
@@ -56,6 +58,7 @@ public class JsonLibraryService : ILibraryService
         {
             string json = JsonSerializer.Serialize(tracks, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(_filePath, json);
+            LibraryChanged?.Invoke(this, EventArgs.Empty); 
         }
         catch (Exception ex)
         {
