@@ -14,20 +14,34 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             
-            
             <TextBlock Text="Audio Library"
                        VerticalAlignment="Center"
-                       Margin="20, 20,0,20"
+                       Margin="20,20,0,20"
                        Foreground="{DynamicResource TextBrush}"
                        FontFamily="Helvetica Bold"
                        FontSize="22"/>
 
-            <Button Content="Load Track"
-                    Classes="primary"
-                    Command="{Binding LoadTrackCommand}"
-                    Grid.Column="1"
-                    HorizontalAlignment="Right"
-                    Margin="0,5,10,5" />
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Spacing="10"
+                        Margin="0,5,10,5">
+                
+                <TextBlock Text="Search track:"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextBrush}"/>
+                
+                <TextBox Text="{Binding SearchText}"
+                         Watermark="Start typing"
+                         MinWidth="200"
+                         VerticalAlignment="Center"/>
+                
+                <Button Content="Load Track"
+                        Classes="primary"
+                        Command="{Binding LoadTrackCommand}"
+                        Padding="15,5"/>
+            </StackPanel>
         </Grid>
         
         <Rectangle Grid.Row="1"
