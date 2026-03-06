@@ -28,6 +28,21 @@
     </UserControl.Styles>
 
     <StackPanel Spacing="5" Margin="10">
+        
+        <Border Background="{DynamicResource SeparatorBrush}"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                Width="300" Height="300"
+                Margin="0,0,0,5">
+            <Viewbox Stretch="Uniform" MaxWidth="80" MaxHeight="80">
+                <TextBlock Text="" 
+                           FontSize="60"
+                           Foreground="{DynamicResource TextBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Viewbox>
+        </Border>
+
         <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
@@ -59,7 +74,5 @@
                     Background="{DynamicResource SeparatorBrush}"
                     Foreground="{DynamicResource AccentBrush}"/>
         </StackPanel>
-
-        
     </StackPanel>
 </UserControl>
