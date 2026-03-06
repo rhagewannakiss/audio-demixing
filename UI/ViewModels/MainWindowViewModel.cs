@@ -11,6 +11,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly PlayerPanelViewModel _playerPanelViewModel;
     private LibraryViewModel? _cachedLibraryVm;
     private DemixingViewModel? _cachedDemixingVm;
+    private HistoryViewModel? _cachedHistoryVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -57,6 +58,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 
             }
             CurrentPageViewModel = _cachedDemixingVm;
+        }
+        else if (SelectedPage == PageType.History)
+        {
+            if (_cachedHistoryVm == null)
+            {
+                _cachedHistoryVm = _serviceProvider.GetRequiredService<HistoryViewModel>();
+            }
+            CurrentPageViewModel = _cachedHistoryVm;
         }
         else
         {

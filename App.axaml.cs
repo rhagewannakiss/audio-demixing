@@ -36,6 +36,7 @@ public partial class App : Application
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
             services.AddSingleton<DemixingViewModel>();
+            services.AddSingleton<HistoryViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 
             _services = services.BuildServiceProvider();
