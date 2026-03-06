@@ -41,16 +41,15 @@ public partial class DemixingViewModel : ViewModelBase
         _libraryService = libraryService;
         
         _libraryService.LibraryChanged += OnLibraryChanged;
-
         Task.Run(RefreshLibraryAsync);
     }
     
     private async void OnLibraryChanged(object? sender, EventArgs e)
     {
-        if (_isLoadingLibrary)
-            return;
-
-        await RefreshLibraryAsync();
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await RefreshLibraryAsync();
+        });
     }
 
     partial void OnSelectedLibraryTrackChanged(TrackInfo? value)
@@ -71,19 +70,23 @@ public partial class DemixingViewModel : ViewModelBase
         _isLoadingLibrary = true;
         try
         {
-            StatusMessage = "Loading";
             var tracks = await _libraryService.LoadTracksAsync();
-            LibraryTracks.Clear();
-            foreach (var track in tracks)
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                LibraryTracks.Add(track);
-            }
-            StatusMessage = "Loaded";
+                LibraryTracks.Clear();
+                foreach (var track in tracks)
+                    LibraryTracks.Add(track);
+            });
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error while loading: {ex.Message}";
         }
+        finally
+        {
+            _isLoadingLibrary = false;
+        }
+        
     }
 
     [RelayCommand]
@@ -113,7 +116,7 @@ public partial class DemixingViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Cancelled";
+            StatusMessage = "Canceled";
         }
         catch (Exception ex)
         {

@@ -11,6 +11,8 @@ public class JsonLibraryService : ILibraryService
 {
     private readonly string _filePath;
     private List<TrackInfo> _tracks = new();
+    private readonly JsonSerializerOptions _cachedJsonSerializerOptions = new() {WriteIndented = true};
+    
     public event EventHandler? LibraryChanged;
     
     public JsonLibraryService()
@@ -30,6 +32,7 @@ public class JsonLibraryService : ILibraryService
 
             string json = await File.ReadAllTextAsync(_filePath);
             _tracks = JsonSerializer.Deserialize<List<TrackInfo>>(json) ?? new List<TrackInfo>();
+            LibraryChanged?.Invoke(this, EventArgs.Empty); 
             return _tracks;
         }
         catch (Exception ex)
@@ -56,7 +59,7 @@ public class JsonLibraryService : ILibraryService
     {
         try
         {
-            string json = JsonSerializer.Serialize(tracks, new JsonSerializerOptions { WriteIndented = true });
+            string json = JsonSerializer.Serialize(tracks, _cachedJsonSerializerOptions);
             await File.WriteAllTextAsync(_filePath, json);
             LibraryChanged?.Invoke(this, EventArgs.Empty); 
         }
