@@ -27,11 +27,11 @@ public partial class App : Application
             DisableAvaloniaDataAnnotationValidation();
 
             var services = new ServiceCollection();
-            services.AddSingleton<IFileService, FileService>();
+            services.AddScoped<IFileService, FileService>();
             services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
-            services.AddSingleton<IMetadataReader, MetadataReader>();
+            services.AddScoped<IMetadataReader, MetadataReader>();
             services.AddSingleton<ILibraryService, JsonLibraryService>();
-            services.AddSingleton<IDemixingService, DemixingService>();
+            services.AddScoped<IDemixingService, DemixingService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();

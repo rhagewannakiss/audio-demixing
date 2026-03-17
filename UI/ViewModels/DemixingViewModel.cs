@@ -6,15 +6,14 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using System.IO;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
-public partial class DemixingViewModel : ViewModelBase
+public partial class DemixingViewModel : LibraryViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly IDemixingService _demixingService;
-    private readonly ILibraryService _libraryService;
-    private bool _isLoadingLibrary;
 
     [ObservableProperty]
     private string? _selectedFilePath;
@@ -26,67 +25,29 @@ public partial class DemixingViewModel : ViewModelBase
     private string _statusMessage = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<string> _outputFiles = new();
+    private ObservableCollection<string> _outputFiles = [];
+
+    public ObservableCollection<TrackInfo> LibraryTracks => Tracks;
 
     [ObservableProperty]
-    private ObservableCollection<TrackInfo> _libraryTracks = new();
+    private TrackInfo? _selectedTrack;
 
-    [ObservableProperty]
-    private TrackInfo? _selectedLibraryTrack;
+    public event Action<string>? StemSelected;
 
-    public DemixingViewModel(IFileService fileService, IDemixingService separationService, ILibraryService libraryService)
+    public DemixingViewModel(IFileService fileService, IDemixingService demixingService, ILibraryService libraryService)
+        : base(libraryService)
     {
         _fileService = fileService;
-        _demixingService = separationService;
-        _libraryService = libraryService;
-        
-        _libraryService.LibraryChanged += OnLibraryChanged;
-        Task.Run(RefreshLibraryAsync);
-    }
-    
-    private async void OnLibraryChanged(object? sender, EventArgs e)
-    {
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            await RefreshLibraryAsync();
-        });
+        _demixingService = demixingService;
     }
 
-    partial void OnSelectedLibraryTrackChanged(TrackInfo? value)
+    partial void OnSelectedTrackChanged(TrackInfo? value)
     {
         if (value != null)
         {
             SelectedFilePath = value.FilePath;
             StatusMessage = $"Track: {value.DisplayName}";
         }
-    }
-
-    [RelayCommand]
-    private async Task RefreshLibraryAsync()
-    {
-        if (_isLoadingLibrary)
-            return;
-
-        _isLoadingLibrary = true;
-        try
-        {
-            var tracks = await _libraryService.LoadTracksAsync();
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                LibraryTracks.Clear();
-                foreach (var track in tracks)
-                    LibraryTracks.Add(track);
-            });
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Error while loading: {ex.Message}";
-        }
-        finally
-        {
-            _isLoadingLibrary = false;
-        }
-        
     }
 
     [RelayCommand]
@@ -108,9 +69,7 @@ public partial class DemixingViewModel : ViewModelBase
             var results = await _demixingService.DemixAsync(SelectedFilePath, progress, cancellationToken);
 
             foreach (var file in results)
-            {
                 OutputFiles.Add(file);
-            }
 
             StatusMessage = "Finished";
         }
@@ -125,6 +84,34 @@ public partial class DemixingViewModel : ViewModelBase
         finally
         {
             IsProcessing = false;
+        }
+    }
+
+    [RelayCommand]
+    private void PlayStem(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return;
+        StemSelected?.Invoke(filePath);
+        //StatusMessage = $"Playing: {Path.GetFileName(filePath)}";
+    }
+
+    [RelayCommand]
+    private async Task SaveStemAsync(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return;
+
+        var fileName = Path.GetFileName(filePath);
+        var savePath = await _fileService.SaveFileAsync(fileName);
+        if (savePath == null) return;
+
+        try
+        {
+            File.Copy(filePath, savePath, overwrite: true);
+            StatusMessage = $"Saved";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error saving: {ex.Message}";
         }
     }
 }

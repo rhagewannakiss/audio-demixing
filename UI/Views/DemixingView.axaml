@@ -1,9 +1,15 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+             xmlns:conv="clr-namespace:AudioStemPlayer.UI.Converters;assembly=AudioStemPlayer.UI"
+             xmlns:converters="clr-namespace:AudioStemPlayer.UI.Converters"
              x:Class="AudioStemPlayer.UI.Views.DemixingView"
              x:DataType="vm:DemixingViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
+
+    <UserControl.Resources>
+        <converters:FileNameConverter x:Key="FileNameConverter"/>
+    </UserControl.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *">
         <Grid Grid.Row="0"
@@ -36,31 +42,18 @@
         
         <StackPanel Grid.Row="2" Margin="20,10,20,10" Spacing="10">
             <TextBlock Text="Select from library:" 
-               Foreground="{DynamicResource TextBrush}"
-               FontWeight="SemiBold"/>
+                       Foreground="{DynamicResource TextBrush}"
+                       FontWeight="SemiBold"/>
 
-    <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,5">
-        <ComboBox Grid.Column="0"
-                  ItemsSource="{Binding LibraryTracks}"
-                  SelectedItem="{Binding SelectedLibraryTrack}"
-                  DisplayMemberBinding="{Binding DisplayName}"
-                  PlaceholderText="Choose a track..."
-                  IsEnabled="{Binding !IsProcessing}"
-                  MinWidth="200"/>
-    </Grid>
-
-    <Grid ColumnDefinitions="Auto, *, Auto">
-        <TextBlock Text="" 
-                   VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextBrush}"/>
-        <TextBlock Grid.Column="1" 
-                   Text=""
-                   VerticalAlignment="Center"
-                   Foreground="{DynamicResource TextBrush}"
-                   TextWrapping="NoWrap"
-                   TextTrimming="CharacterEllipsis"
-                   Margin="5,0,10,0"/>
-    </Grid>
+            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,5">
+                <ComboBox Grid.Column="0"
+                          ItemsSource="{Binding LibraryTracks}"
+                          SelectedItem="{Binding SelectedTrack}"
+                          DisplayMemberBinding="{Binding DisplayName}"
+                          PlaceholderText="Choose a track..."
+                          IsEnabled="{Binding !IsProcessing}"
+                          MinWidth="200"/>
+            </Grid>
 
             <ProgressBar IsVisible="{Binding IsProcessing}"
                          IsIndeterminate="True"
@@ -70,21 +63,45 @@
             <TextBlock Text="{Binding StatusMessage}" 
                        Foreground="{DynamicResource TextBrush}"
                        TextWrapping="Wrap"/>
-
+            
+            
+            
             <TextBlock Text="Generated stems:"
                        Foreground="{DynamicResource TextBrush}"
                        FontWeight="SemiBold"
                        Margin="0,10,0,5"/>
-
+            
+            
+            
             <ListBox ItemsSource="{Binding OutputFiles}"
                      Background="Transparent"
                      BorderThickness="0"
-                     MaxHeight="300">
+                     MaxHeight="300"
+                     Margin="-20 0 -20 0">
+                
+                
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding}"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   Margin="10,5"/>
+                        <Grid ColumnDefinitions="*, Auto, Auto">
+
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Converter={StaticResource FileNameConverter}}"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+
+                            <Button Grid.Column="1"
+                                    Content="Play" 
+                                    Command="{Binding $parent[UserControl].DataContext.PlayStemCommand}"
+                                    CommandParameter="{Binding}"
+                                    Margin="2,0"/>
+
+                            <Button Grid.Column="2"
+                                    Content="Save" 
+                                    Command="{Binding $parent[UserControl].DataContext.SaveStemCommand}"
+                                    CommandParameter="{Binding}"
+                                    Margin="2,0"/>
+                        </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

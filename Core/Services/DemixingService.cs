@@ -3,32 +3,49 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace AudioStemPlayer.Core.Services;
 
 public class DemixingService : IDemixingService
 {
-    // placeholder
-    public async Task<IReadOnlyList<string>> DemixAsync(string inputFile, IProgress<string> progress, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<string>> DemixAsync(string inputFile, IProgress<string> progress, CancellationToken cancellationToken)
     {
-        // some progress imitation
-        progress?.Report("Waiting for demucs");
-        await Task.Delay(1000, cancellationToken);
-
-        progress?.Report("Working");
-        await Task.Delay(2000, cancellationToken);
-        
-        var stems = new List<string>
+        var outputDir = Path.Combine(Path.GetDirectoryName(inputFile), "separated");
+        var process = new Process
         {
-            "vocals.wav",
-            "drums.wav",
-            "bass.wav",
-            "other.wav"
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "python3",
+                Arguments = $"-m demucs -o \"{outputDir}\" \"{inputFile}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
         };
 
-        progress?.Report("Saving");
-        await Task.Delay(500, cancellationToken);
+        process.Start();
 
-        return stems;
+        _ = Task.Run(() => ReadOutputAsync(process.StandardOutput, progress, cancellationToken), cancellationToken);
+        _ = Task.Run(() => ReadOutputAsync(process.StandardError, progress, cancellationToken), cancellationToken);
+
+        await process.WaitForExitAsync(cancellationToken);
+
+        if (process.ExitCode != 0)
+            throw new Exception("Demucs failed");
+
+        return Directory.GetFiles(Path.Combine(outputDir, "htdemucs", Path.GetFileNameWithoutExtension(inputFile)), "*.wav");
     }
+
+    private async Task ReadOutputAsync(StreamReader reader, IProgress<string> progress, CancellationToken token)
+    {
+        string line;
+        while ((line = await reader.ReadLineAsync()) != null && !token.IsCancellationRequested)
+        {
+            if (line.Contains("%") && line.Contains("|")) progress?.Report(line);
+        }
+    }
+    
+    
 }

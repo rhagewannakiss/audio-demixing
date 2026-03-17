@@ -40,7 +40,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     private void UpdateCurrentPage()
     {
-        
         if (SelectedPage == PageType.Library)
         {
             if (_cachedLibraryVm == null)
@@ -55,7 +54,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (_cachedDemixingVm == null)
             {
                 _cachedDemixingVm = _serviceProvider.GetRequiredService<DemixingViewModel>();
-                
+                _cachedDemixingVm.StemSelected += path => _playerPanelViewModel.LoadTrack(path);
             }
             CurrentPageViewModel = _cachedDemixingVm;
         }
@@ -73,8 +72,5 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public void Dispose()
-    {
-
-    }
+    public void Dispose() {}
 }
