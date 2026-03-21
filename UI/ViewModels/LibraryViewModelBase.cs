@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using AudioStemPlayer.Core.Services;
 using AudioStemPlayer.Core.Models;
 using System.Collections.ObjectModel;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
@@ -13,7 +13,7 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
 {
     protected readonly ILibraryService _libraryService;
     private bool _isLoadingLibrary;
-    protected HashSet<TrackInfo> _allTracks = [];
+    protected ConcurrentDictionary<string, TrackInfo> _allTracks = new();
 
     [ObservableProperty]
     private ObservableCollection<TrackInfo> _tracks = [];
@@ -25,7 +25,7 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
         _ = RefreshLibraryAsync();
     }
 
-    protected async void OnLibraryChanged(object? sender, EventArgs e)
+    private async void OnLibraryChanged(object? sender, EventArgs e)
     {
         await RefreshLibraryAsync();
     }
@@ -39,16 +39,26 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
         try
         {
             var tracks = await _libraryService.LoadTracksAsync();
-            _allTracks = tracks.ToHashSet();
+            var newDict = new ConcurrentDictionary<string, TrackInfo>(
+                tracks.ToDictionary(t => t.FilePath, t => t)
+            );
 
+            _allTracks = newDict;
+
+            var sorted = _allTracks.Values.OrderBy(t => t.DateAdded).ToList();
+            sorted.Reverse();
+            
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Tracks.Clear();
-                foreach (var track in _allTracks)
+                foreach (var track in sorted)
                     Tracks.Add(track);
             });
         }
-        catch (Exception ex) {}
+        catch (Exception ex)
+        {
+
+        }
         finally
         {
             _isLoadingLibrary = false;

@@ -16,9 +16,6 @@ public partial class DemixingViewModel : LibraryViewModelBase
     private readonly IDemixingService _demixingService;
 
     [ObservableProperty]
-    private string? _selectedFilePath;
-
-    [ObservableProperty]
     private bool _isProcessing;
 
     [ObservableProperty]
@@ -41,19 +38,10 @@ public partial class DemixingViewModel : LibraryViewModelBase
         _demixingService = demixingService;
     }
 
-    partial void OnSelectedTrackChanged(TrackInfo? value)
-    {
-        if (value != null)
-        {
-            SelectedFilePath = value.FilePath;
-            StatusMessage = $"Track: {value.DisplayName}";
-        }
-    }
-
     [RelayCommand]
     private async Task DemixAsync(CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(SelectedFilePath))
+        if (SelectedTrack == null || string.IsNullOrEmpty(SelectedTrack.FilePath))
         {
             StatusMessage = "First choose a file";
             return;
@@ -66,7 +54,7 @@ public partial class DemixingViewModel : LibraryViewModelBase
         try
         {
             var progress = new Progress<string>(message => StatusMessage = message);
-            var results = await _demixingService.DemixAsync(SelectedFilePath, progress, cancellationToken);
+            var results = await _demixingService.DemixAsync(SelectedTrack.FilePath, progress, cancellationToken);
 
             foreach (var file in results)
                 OutputFiles.Add(file);

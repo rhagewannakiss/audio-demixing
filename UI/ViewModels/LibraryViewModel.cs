@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
@@ -30,9 +29,6 @@ public partial class LibraryViewModel : LibraryViewModelBase
     {
         _fileService = fileService;
         _metadataReader = metadataReader;
-
-        _libraryService.LibraryChanged -= OnLibraryChanged;
-        _libraryService.LibraryChanged += OnLibraryChangedWithFilter;
     }
 
     private async void OnLibraryChangedWithFilter(object? sender, EventArgs e)
@@ -56,31 +52,40 @@ public partial class LibraryViewModel : LibraryViewModelBase
 
         var track = await _metadataReader.ReadAsync(path);
 
-        if (_allTracks.Any(t => t.FilePath == track.FilePath))
+        if (!_allTracks.TryAdd(track.FilePath, track))
             return;
 
-        _allTracks.Add(track);
-        UpdateTracksList();
         await _libraryService.AddTrackAsync(track);
+        UpdateTracksList();
         StatusMessage = $"Added: {track.DisplayName}";
     }
 
     private void UpdateTracksList()
     {
         var filtered = string.IsNullOrWhiteSpace(SearchText)
-            ? (IEnumerable<TrackInfo>)_allTracks
-            : _allTracks.Where(t =>
+            ? _allTracks.Values
+            : _allTracks.Values.Where(t =>
                     t.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     t.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     t.Artist.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     t.Album.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
+        var sorted = filtered.OrderBy(t => t.DateAdded).ToList();
+        sorted.Reverse();
+
+        var selectedPath = SelectedTrack?.FilePath;
+
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             Tracks.Clear();
-            foreach (var track in filtered)
+            foreach (var track in sorted)
                 Tracks.Add(track);
+
+            if (selectedPath != null && _allTracks.TryGetValue(selectedPath, out var restoredTrack))
+                SelectedTrack = restoredTrack;
+            else
+                SelectedTrack = null;
         });
     }
 
@@ -88,7 +93,6 @@ public partial class LibraryViewModel : LibraryViewModelBase
 
     [RelayCommand]
     private void Search() => UpdateTracksList();
-
     public override void Dispose()
     {
         _libraryService.LibraryChanged -= OnLibraryChangedWithFilter;
