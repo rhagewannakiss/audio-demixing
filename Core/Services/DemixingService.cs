@@ -17,7 +17,7 @@ public class DemixingService : IDemixingService
             StartInfo = new ProcessStartInfo
             {
                 FileName = "python3",
-                Arguments = $"-m demucs -o \"{outputDir}\" \"{inputFile}\"",
+                Arguments = $"-m demucs -o \"{outputDir}\" \"{inputFile}\" -n htdemucs_ft -j 8",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -40,10 +40,10 @@ public class DemixingService : IDemixingService
 
     private async Task ReadOutputAsync(StreamReader reader, IProgress<string> progress, CancellationToken token)
     {
-        string line;
-        while ((line = await reader.ReadLineAsync()) != null && !token.IsCancellationRequested)
+        string? line;
+        while ((line = await reader.ReadLineAsync(token)) != null && !token.IsCancellationRequested)
         {
-            if (line.Contains("%") && line.Contains("|")) progress?.Report(line);
+            if (line.Contains('%') && line.Contains('|')) progress?.Report(line);
         }
     }
     
