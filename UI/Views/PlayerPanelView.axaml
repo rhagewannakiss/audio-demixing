@@ -1,41 +1,78 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+             xmlns:vm="using:AudioStemPlayer.UI.ViewModels"
              x:Class="AudioStemPlayer.UI.Views.PlayerPanelView"
-             x:DataType="vm:PlayerPanelViewModel"
-             Background="{DynamicResource WindowBackgroundBrush}">
-    
-    <StackPanel Spacing="10" Margin="10">
-        <TextBlock Text="" 
-                   Foreground="{DynamicResource TextBrush}" 
-                   TextWrapping="Wrap"/>
+             x:DataType="vm:PlayerPanelViewModel">
+    <UserControl.Styles>
+        <Style Selector="Slider.ModernSlider /template/ Thumb">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Ellipse Fill="{TemplateBinding Background}"
+                             Stroke="White"
+                             StrokeThickness="2"/>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Slider.ModernSlider /template/ Thumb:pointerover">
+            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+        </Style>
+
+        <Style Selector="Slider.ModernSlider /template/ Thumb:pressed">
+            <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="5" Margin="10">
         
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
-            <Button Content="▶" 
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    IsEnabled="True"/>
-            
-            <Button Content="⏹"
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    IsEnabled="True"/>
-        </StackPanel>
+        <Border Background="{DynamicResource SeparatorBrush}"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                Width="300" Height="300"
+                Margin="0,0,0,5">
+            <Viewbox Stretch="Uniform" MaxWidth="80" MaxHeight="80">
+                <TextBlock Text="" 
+                           FontSize="60"
+                           Foreground="{DynamicResource TextBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Viewbox>
+        </Border>
 
-        <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="{Binding Position, StringFormat={}{0:F1}s}" 
-                       Foreground="{DynamicResource TextBrush}" Width="50"/>
-            <Slider Minimum="0" Maximum="" 
-                    Value="{Binding Position}" Width="150"/>
-            <TextBlock Text="" 
-                       Foreground="{DynamicResource TextBrush}" Width="50"/>
-        </StackPanel>
+        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"/>
 
-        <StackPanel Orientation="Horizontal" Spacing="5">
-            <TextBlock Text="Volume:" Foreground="{DynamicResource TextBrush}"/>
-            <Slider Minimum="0" Maximum="100" Value="{Binding Volume}" Width="100"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+            <Button Content="Play" Command="{Binding PlayCommand}" 
+                    IsEnabled="{Binding IsLoaded}"/>
+            <Button Content="Pause" Command="{Binding PauseCommand}" 
+                    IsEnabled="{Binding IsPlaying}"/>
+            <Button Content="Stop" Command="{Binding StopCommand}" 
+                    IsEnabled="{Binding IsLoaded}"/>
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+            <TextBlock Text="{Binding CurrentTime}" Width="40" TextAlignment="Center"/>
+            <Slider Classes="ModernSlider"
+                    Minimum="0" Maximum="1" 
+                    Value="{Binding Position}" 
+                    Width="200"
+                    Background="{DynamicResource SeparatorBrush}"
+                    Foreground="{DynamicResource AccentBrush}"/>
+            <TextBlock Text="{Binding TotalTime}" Width="40" TextAlignment="Center"/>
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
+            <TextBlock Text="Volume:" VerticalAlignment="Center"/>
+            <Slider Classes="ModernSlider"
+                    Minimum="0" Maximum="100" 
+                    Value="{Binding Volume}" 
+                    Width="150"
+                    Background="{DynamicResource SeparatorBrush}"
+                    Foreground="{DynamicResource AccentBrush}"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

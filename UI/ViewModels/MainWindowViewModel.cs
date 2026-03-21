@@ -1,14 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Collections.Generic;
-using AudioStemPlayer.Core.Services;
 using System;
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    private readonly IFileService _fileService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly PlayerPanelViewModel _playerPanelViewModel;
+    private LibraryViewModel? _cachedLibraryVm;
+    private DemixingViewModel? _cachedDemixingVm;
+    private HistoryViewModel? _cachedHistoryVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -19,18 +22,14 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<PageType> _pages = new(Enum.GetValues<PageType>());
 
-    [ObservableProperty]
-    private PlayerPanelViewModel _playerPanelViewModel;
+    public PlayerPanelViewModel PlayerPanelViewModel => _playerPanelViewModel;
 
-    public List<PageType> PageTypes { get; } = [ PageType.Library ];
-
-    public MainWindowViewModel(IFileService fileService)
+    public MainWindowViewModel(IServiceProvider serviceProvider, PlayerPanelViewModel playerPanelViewModel)
     {
-        _fileService = fileService;
-        PlayerPanelViewModel = new PlayerPanelViewModel();
-        SelectedPage = PageType.Library;
+        _serviceProvider = serviceProvider;
+        _playerPanelViewModel = playerPanelViewModel;
 
-        
+        SelectedPage = PageType.Library;
         UpdateCurrentPage();
     }
 
@@ -41,10 +40,37 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateCurrentPage()
     {
-        CurrentPageViewModel = SelectedPage switch
+        if (SelectedPage == PageType.Library)
         {
-            PageType.Library => new LibraryViewModel(_fileService),
-            _ => null
-        };
+            if (_cachedLibraryVm == null)
+            {
+                _cachedLibraryVm = _serviceProvider.GetRequiredService<LibraryViewModel>();
+                _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
+            }
+            CurrentPageViewModel = _cachedLibraryVm;
+        }
+        else if (SelectedPage == PageType.Demixing)
+        {
+            if (_cachedDemixingVm == null)
+            {
+                _cachedDemixingVm = _serviceProvider.GetRequiredService<DemixingViewModel>();
+                _cachedDemixingVm.StemSelected += path => _playerPanelViewModel.LoadTrack(path);
+            }
+            CurrentPageViewModel = _cachedDemixingVm;
+        }
+        else if (SelectedPage == PageType.History)
+        {
+            if (_cachedHistoryVm == null)
+            {
+                _cachedHistoryVm = _serviceProvider.GetRequiredService<HistoryViewModel>();
+            }
+            CurrentPageViewModel = _cachedHistoryVm;
+        }
+        else
+        {
+            CurrentPageViewModel = null;
+        }
     }
+
+    public void Dispose() {}
 }

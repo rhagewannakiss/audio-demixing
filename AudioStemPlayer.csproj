@@ -11,7 +11,6 @@
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaResource Include="UI\Assets\avalonia-logo.ico" />
     <Folder Include="App\" />
-    <Folder Include="Core\Models\" />
     <Folder Include="UI\Converters\" />
   </ItemGroup>
 
@@ -26,7 +25,9 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-    <PackageReference Include="LibVLCSharp" Version="3.8.5" />
+    <PackageReference Include="ManagedBass" Version="4.0.2" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,5 +41,17 @@
       <DependentUpon>App.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+
+
+
+  <ItemGroup>
+    <None Update="runtimes\osx\native\libbass.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Update="runtimes\linux-x86\native\libbass.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,40 +1,101 @@
-using System.Collections.ObjectModel;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
-
+using AudioStemPlayer.Core.Models;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
-public partial class LibraryViewModel : ViewModelBase
+public partial class LibraryViewModel : LibraryViewModelBase
 {
     private readonly IFileService _fileService;
+    private readonly IMetadataReader _metadataReader;
 
     [ObservableProperty]
-    private string? _selectedTrack;
+    private TrackInfo? _selectedTrack;
 
     [ObservableProperty]
-    private ObservableCollection<string> _tracks = new();
+    private string _searchText = string.Empty;
 
-    public LibraryViewModel(IFileService fileService)
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    public event Action<string>? TrackSelected;
+
+    public LibraryViewModel(IFileService fileService, IMetadataReader metadataReader, ILibraryService libraryService)
+        : base(libraryService)
     {
         _fileService = fileService;
+        _metadataReader = metadataReader;
+    }
+
+    private async void OnLibraryChangedWithFilter(object? sender, EventArgs e)
+    {
+        await RefreshLibraryAsync();
+        UpdateTracksList();
+    }
+
+    partial void OnSelectedTrackChanged(TrackInfo? value)
+    {
+        if (value != null)
+            TrackSelected?.Invoke(value.FilePath);
     }
 
     [RelayCommand]
     private async Task LoadTrackAsync()
     {
         var path = await _fileService.OpenFileAsync();
-        if (!string.IsNullOrEmpty(path))
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        var track = await _metadataReader.ReadAsync(path);
+
+        if (!_allTracks.TryAdd(track.FilePath, track))
+            return;
+
+        await _libraryService.AddTrackAsync(track);
+        UpdateTracksList();
+        StatusMessage = $"Added: {track.DisplayName}";
+    }
+
+    private void UpdateTracksList()
+    {
+        var filtered = string.IsNullOrWhiteSpace(SearchText)
+            ? _allTracks.Values
+            : _allTracks.Values.Where(t =>
+                    t.DisplayName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    t.Title.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    t.Artist.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    t.Album.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+        var sorted = filtered.OrderBy(t => t.DateAdded).ToList();
+        sorted.Reverse();
+
+        var selectedPath = SelectedTrack?.FilePath;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            Tracks.Add(path);
-        }
+            Tracks.Clear();
+            foreach (var track in sorted)
+                Tracks.Add(track);
+
+            if (selectedPath != null && _allTracks.TryGetValue(selectedPath, out var restoredTrack))
+                SelectedTrack = restoredTrack;
+            else
+                SelectedTrack = null;
+        });
+    }
+
+    partial void OnSearchTextChanged(string value) => UpdateTracksList();
+
+    [RelayCommand]
+    private void Search() => UpdateTracksList();
+    public override void Dispose()
+    {
+        _libraryService.LibraryChanged -= OnLibraryChangedWithFilter;
+        base.Dispose();
     }
 }
-
-
-
-
-
-

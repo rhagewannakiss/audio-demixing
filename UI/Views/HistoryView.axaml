@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
-             x:Class="AudioStemPlayer.UI.Views.LibraryView"
-             x:DataType="vm:LibraryViewModel"
+             x:Class="AudioStemPlayer.UI.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
     <Grid RowDefinitions="Auto, Auto, *">
@@ -14,7 +14,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             
-            <TextBlock Text="Audio Library"
+            <TextBlock Text="History"
                        VerticalAlignment="Center"
                        Margin="20,20,0,20"
                        Foreground="{DynamicResource TextBrush}"
@@ -28,40 +28,36 @@
                         Spacing="10"
                         Margin="0,5,10,5">
                 
-                <TextBlock Text="Search track:"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextBrush}"/>
-                
-                <TextBox Text="{Binding SearchText}"
-                         Watermark="Start typing"
-                         MinWidth="200"
-                         VerticalAlignment="Center"/>
-                
-                <Button Content="Load Track"
+                <Button Content="Clear History"
                         Classes="primary"
-                        Command="{Binding LoadTrackCommand}"
+                        Command="{Binding ClearHistoryCommand}"
                         Padding="15,5"/>
             </StackPanel>
         </Grid>
-        
+
         <Rectangle Grid.Row="1"
                    Height="1"
                    Fill="{DynamicResource SeparatorBrush}"
                    HorizontalAlignment="Stretch" />
-        
-        <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Tracks}"
-                 SelectedItem="{Binding SelectedTrack}"
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Margin="0">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding DisplayName}"
-                               Foreground="{DynamicResource TextBrush}"
-                               Margin="10,5" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+
+        <StackPanel Grid.Row="2" Margin="20,10,20,10">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{DynamicResource TextBrush}"
+                       Margin="0,0,0,10"
+                       FontStyle="Italic"/>
+
+            <ListBox ItemsSource="{Binding HistoryItems}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     MinHeight="200">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   Margin="10,5"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
     </Grid>
 </UserControl>
