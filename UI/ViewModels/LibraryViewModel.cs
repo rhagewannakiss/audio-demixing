@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
 using AudioStemPlayer.Core.Models;
+using Avalonia.Threading;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
@@ -12,6 +13,7 @@ public partial class LibraryViewModel : LibraryViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly IMetadataReader _metadataReader;
+    private bool _isRestoringSelection;
 
     [ObservableProperty]
     private TrackInfo? _selectedTrack;
@@ -39,10 +41,10 @@ public partial class LibraryViewModel : LibraryViewModelBase
 
     partial void OnSelectedTrackChanged(TrackInfo? value)
     {
-        if (value != null)
+        if (!_isRestoringSelection && value != null)
             TrackSelected?.Invoke(value.FilePath);
     }
-
+    
     [RelayCommand]
     private async Task LoadTrackAsync()
     {
@@ -51,12 +53,30 @@ public partial class LibraryViewModel : LibraryViewModelBase
             return;
 
         var track = await _metadataReader.ReadAsync(path);
+        track.DateAdded = DateTime.Now;
 
         if (!_allTracks.TryAdd(track.FilePath, track))
             return;
 
         await _libraryService.AddTrackAsync(track);
+
+        string? selectedPath = SelectedTrack?.FilePath;
+
         UpdateTracksList();
+
+        if (selectedPath != null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _isRestoringSelection = true;
+                if (_allTracks.TryGetValue(selectedPath, out var restoredTrack))
+                {
+                    SelectedTrack = restoredTrack;
+                }
+                _isRestoringSelection = false;
+            }, DispatcherPriority.Background);
+        }
+
         StatusMessage = $"Added: {track.DisplayName}";
     }
 
@@ -71,26 +91,28 @@ public partial class LibraryViewModel : LibraryViewModelBase
                     t.Album.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-        var sorted = filtered.OrderBy(t => t.DateAdded).ToList();
-        sorted.Reverse();
+        var sorted = filtered.OrderByDescending(t => t.DateAdded).ToList();
 
-        var selectedPath = SelectedTrack?.FilePath;
+        string? selectedPath = SelectedTrack?.FilePath;
+        
+        
+        Tracks.Clear();
+        foreach (var track in sorted)
+            Tracks.Add(track);
+            
+        SelectedTrack = null;
 
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        _isRestoringSelection = true;
+        if (selectedPath != null && _allTracks.TryGetValue(selectedPath, out var restoredTrack))
         {
-            Tracks.Clear();
-            foreach (var track in sorted)
-                Tracks.Add(track);
-
-            if (selectedPath != null && _allTracks.TryGetValue(selectedPath, out var restoredTrack))
-                SelectedTrack = restoredTrack;
-            else
-                SelectedTrack = null;
-        });
+            SelectedTrack = restoredTrack;
+        }
+   
+        _isRestoringSelection = false;
     }
 
     partial void OnSearchTextChanged(string value) => UpdateTracksList();
-
+    
     [RelayCommand]
     private void Search() => UpdateTracksList();
     public override void Dispose()

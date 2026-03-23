@@ -32,22 +32,19 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
 
     protected async Task RefreshLibraryAsync()
     {
-        if (_isLoadingLibrary)
-            return;
-
+        if (_isLoadingLibrary) return;
         _isLoadingLibrary = true;
+        
         try
         {
             var tracks = await _libraryService.LoadTracksAsync();
             var newDict = new ConcurrentDictionary<string, TrackInfo>(
                 tracks.ToDictionary(t => t.FilePath, t => t)
             );
-
             _allTracks = newDict;
 
-            var sorted = _allTracks.Values.OrderBy(t => t.DateAdded).ToList();
-            sorted.Reverse();
-            
+            var sorted = _allTracks.Values.OrderByDescending(t => t.DateAdded).ToList();
+
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Tracks.Clear();
@@ -57,7 +54,7 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-
+            System.Diagnostics.Debug.WriteLine($"RefreshLibraryAsync error: {ex.Message}");
         }
         finally
         {
