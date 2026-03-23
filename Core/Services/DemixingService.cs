@@ -9,9 +9,19 @@ namespace AudioStemPlayer.Core.Services;
 
 public class DemixingService : IDemixingService
 {
+    private static readonly string _appDataPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "AudioStemPlayer",
+        "Separated");
+
     public async Task<IReadOnlyList<string>> DemixAsync(string inputFile, IProgress<string> progress, CancellationToken cancellationToken)
     {
-        var outputDir = Path.Combine(Path.GetDirectoryName(inputFile), "separated");
+        Directory.CreateDirectory(_appDataPath);
+
+        string inputFileName = Path.GetFileNameWithoutExtension(inputFile);
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string outputDir = Path.Combine(_appDataPath, $"{inputFileName}_{timestamp}");
+
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
@@ -35,7 +45,8 @@ public class DemixingService : IDemixingService
         if (process.ExitCode != 0)
             throw new Exception("Demucs failed");
 
-        return Directory.GetFiles(Path.Combine(outputDir, "htdemucs", Path.GetFileNameWithoutExtension(inputFile)), "*.wav");
+        string demucsOutputDir = Path.Combine(outputDir, "htdemucs_ft", Path.GetFileNameWithoutExtension(inputFile));
+        return Directory.GetFiles(demucsOutputDir, "*.wav");
     }
 
     private async Task ReadOutputAsync(StreamReader reader, IProgress<string> progress, CancellationToken token)
@@ -46,6 +57,4 @@ public class DemixingService : IDemixingService
             if (line.Contains('%') && line.Contains('|')) progress?.Report(line);
         }
     }
-    
-    
 }
