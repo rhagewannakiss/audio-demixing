@@ -27,9 +27,28 @@
                         VerticalAlignment="Center"
                         Spacing="10"
                         Margin="0,5,10,5">
-                
-                <Button Content="Clear History"
+
+                <TextBlock Text="Search:"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextBrush}"/>
+
+                <TextBox Text="{Binding SearchText}"
+                         Watermark="Title, artist, path, date"
+                         MinWidth="220"
+                         VerticalAlignment="Center"/>
+
+                <Button Content="Play Again"
                         Classes="primary"
+                        Command="{Binding PlayAgainCommand}"
+                        Padding="15,5"/>
+
+                <Button Content="Remove Selected"
+                        Classes="danger"
+                        Command="{Binding DeleteSelectedCommand}"
+                        Padding="15,5"/>
+
+                <Button Content="Clear History"
+                        Classes="danger"
                         Command="{Binding ClearHistoryCommand}"
                         Padding="15,5"/>
             </StackPanel>
@@ -46,15 +65,67 @@
                        Margin="0,0,0,10"
                        FontStyle="Italic"/>
 
+            <Grid ColumnDefinitions="110,70,2*,*,3*"
+                  Margin="10,0,10,6">
+                <TextBlock Grid.Column="0"
+                           Text="Date"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+                <TextBlock Grid.Column="1"
+                           Text="Time"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+                <TextBlock Grid.Column="2"
+                           Text="Track"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+                <TextBlock Grid.Column="3"
+                           Text="Artist"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+                <TextBlock Grid.Column="4"
+                           Text="File"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+            </Grid>
+
             <ListBox ItemsSource="{Binding HistoryItems}"
+                     SelectedItem="{Binding SelectedHistoryItem}"
                      Background="Transparent"
                      BorderThickness="0"
                      MinHeight="200">
                 <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding}"
-                                   Foreground="{DynamicResource TextBrush}"
-                                   Margin="10,5"/>
+                    <DataTemplate x:DataType="vm:PlaybackHistoryRowViewModel">
+                        <StackPanel>
+                            <TextBlock Text="{Binding GroupHeader}"
+                                       IsVisible="{Binding HasGroupHeader}"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       FontWeight="Bold"
+                                       FontSize="15"
+                                       Margin="10,10,0,5"/>
+
+                            <Grid ColumnDefinitions="110,70,2*,*,3*"
+                                  Margin="10,5">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding DateText}"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TimeText}"
+                                           Foreground="{DynamicResource TextBrush}"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Title}"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="3"
+                                           Text="{Binding Artist}"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="4"
+                                           Text="{Binding FilePath}"
+                                           Foreground="{DynamicResource TextBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

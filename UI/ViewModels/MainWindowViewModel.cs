@@ -64,6 +64,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (_cachedHistoryVm == null)
             {
                 _cachedHistoryVm = _serviceProvider.GetRequiredService<HistoryViewModel>();
+                _cachedHistoryVm.PlayAgainRequested += OnHistoryPlayAgainRequested;
             }
             CurrentPageViewModel = _cachedHistoryVm;
         }
@@ -81,9 +82,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private void OnHistoryPlayAgainRequested(string path)
+    {
+        _playerPanelViewModel.LoadTrack(path);
+    }
+
     public void Dispose()
     {
         if (_cachedLibraryVm != null)
             _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
+
+        if (_cachedHistoryVm != null)
+            _cachedHistoryVm.PlayAgainRequested -= OnHistoryPlayAgainRequested;
     }
 }

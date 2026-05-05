@@ -18,6 +18,20 @@ public class TrackInfo
     public string DisplayName =>
         string.IsNullOrEmpty(Artist) ? Title : $"{Artist} - {Title}";
 
+    public string DurationText
+    {
+        get
+        {
+            if (DurationSeconds <= 0)
+                return "--:--";
+
+            var duration = TimeSpan.FromSeconds(DurationSeconds);
+            return duration.TotalHours >= 1
+                ? duration.ToString(@"h\:mm\:ss")
+                : duration.ToString(@"m\:ss");
+        }
+    }
+
     public override bool Equals(object? obj) => obj is TrackInfo other && FilePath == other.FilePath;
     public override int GetHashCode() => FilePath?.GetHashCode() ?? 0;
 }

@@ -12,5 +12,6 @@ public interface IPlaybackHistoryService
 
     Task AddPlaybackAsync(string filePath, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PlaybackHistoryInfo>> GetRecentAsync(int limit = 100, CancellationToken cancellationToken = default);
+    Task DeleteAsync(long id, CancellationToken cancellationToken = default);
     Task ClearAsync(CancellationToken cancellationToken = default);
 }

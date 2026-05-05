@@ -54,19 +54,43 @@
                    Fill="{DynamicResource SeparatorBrush}"
                    HorizontalAlignment="Stretch" />
         
-        <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Tracks}"
-                 SelectedItem="{Binding SelectedTrack}"
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Margin="0">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding DisplayName}"
-                               Foreground="{DynamicResource TextBrush}"
-                               Margin="10,5" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <Grid Grid.Row="2"
+              RowDefinitions="Auto,*">
+            <Grid ColumnDefinitions="*,90"
+                  Margin="10,8,20,4">
+                <TextBlock Grid.Column="0"
+                           Text="Track"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"/>
+                <TextBlock Grid.Column="1"
+                           Text="Duration"
+                           Foreground="{DynamicResource TextBrush}"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Right"/>
+            </Grid>
+
+            <ListBox Grid.Row="1"
+                     ItemsSource="{Binding Tracks}"
+                     SelectedItem="{Binding SelectedTrack}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Margin="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,90"
+                              Margin="10,5">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding DisplayName}"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding DurationText}"
+                                       Foreground="{DynamicResource TextBrush}"
+                                       HorizontalAlignment="Right" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
     </Grid>
 </UserControl>

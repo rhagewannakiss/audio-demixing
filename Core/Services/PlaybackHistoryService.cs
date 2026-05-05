@@ -95,6 +95,19 @@ LIMIT $limit;
         return history;
     }
 
+    public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
+    {
+        await _databaseInitializer.InitializeAsync(cancellationToken);
+        await using var connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM PlaybackHistory WHERE Id = $id;";
+        command.Parameters.AddWithValue("$id", id);
+
+        var affectedRows = await command.ExecuteNonQueryAsync(cancellationToken);
+        if (affectedRows > 0)
+            PlaybackHistoryChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public async Task ClearAsync(CancellationToken cancellationToken = default)
     {
         await _databaseInitializer.InitializeAsync(cancellationToken);
