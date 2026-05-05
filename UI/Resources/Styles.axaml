@@ -60,4 +60,32 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AccentPressedBrush}"/>
         </Style>
     </Style>
+    
+    
+    
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0.2"/>
+                <BrushTransition Property="Foreground" Duration="0.2"/>
+                <BrushTransition Property="BorderBrush" Duration="0.2"/>
+            </Transitions>
+        </Setter>
+        <Style Selector="^:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource DangerForegroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+        <Style Selector="^:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource DangerPressedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerPressedBrush}"/>
+        </Style>
+    </Style>
 </Styles>

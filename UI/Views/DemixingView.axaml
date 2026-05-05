@@ -27,12 +27,17 @@
                        FontFamily="Helvetica Bold"
                        FontSize="22"/>
 
-            <Button Content="Start"
-                    Classes="primary"
-                    Command="{Binding DemixCommand}"
-                    Grid.Column="1"
-                    HorizontalAlignment="Right"
-                    Margin="0,5,10,5" />
+            <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,5,10,5">
+                <Button Content="Start"
+                        Classes="primary"
+                        Command="{Binding DemixCommand}"
+                        Margin="5,0"/>
+                <Button Content="Cancel"
+                        Classes="danger"
+                        IsVisible="{Binding IsProcessing}"
+                        Command="{Binding CancelCommand}"
+                        Margin="5,0"/>
+            </StackPanel>
         </Grid>
 
         <Rectangle Grid.Row="1"

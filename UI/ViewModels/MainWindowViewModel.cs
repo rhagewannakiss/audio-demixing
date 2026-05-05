@@ -46,6 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             {
                 _cachedLibraryVm = _serviceProvider.GetRequiredService<LibraryViewModel>();
                 _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
+                _cachedLibraryVm.TrackRemoved += OnTrackRemoved;
             }
             CurrentPageViewModel = _cachedLibraryVm;
         }
@@ -72,5 +73,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public void Dispose() {}
+    private void OnTrackRemoved(string removedPath)
+    {
+        if (_playerPanelViewModel.CurrentFilePath == removedPath)
+        {
+            _playerPanelViewModel.Unload();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_cachedLibraryVm != null)
+            _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
+    }
 }

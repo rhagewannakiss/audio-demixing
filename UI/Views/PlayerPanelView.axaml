@@ -43,7 +43,20 @@
             </Viewbox>
         </Border>
 
-        <TextBlock Text="{Binding Status}" HorizontalAlignment="Center"/>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding TrackTitle}"
+                       FontSize="24"
+                       Foreground="{DynamicResource TextBrush}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="10,0"/>
+            <TextBlock Text="{Binding TrackArtist}"
+                       FontSize="16"
+                       Foreground="{DynamicResource TextBrush}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="10,5,10,0"/>
+        </StackPanel>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
             <Button Content="Play" Command="{Binding PlayCommand}" 

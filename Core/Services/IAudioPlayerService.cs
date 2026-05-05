@@ -16,6 +16,9 @@ public interface IAudioPlayerService : IDisposable
 
     void Stop();
 
+    
+    void Unload();
+
 
     int Volume { get; set; }
 

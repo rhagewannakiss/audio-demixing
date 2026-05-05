@@ -133,8 +133,9 @@ public class AudioPlayerService : IAudioPlayerService
         Bass.ChannelSetPosition(_stream, 0);
     }
 
-    private void Unload()
+    public void Unload()
     {
+        _positionTimer.Stop();
         if (_stream != 0)
         {
             Bass.StreamFree(_stream);
