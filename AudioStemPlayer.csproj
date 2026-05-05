@@ -26,6 +26,7 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="ManagedBass" Version="4.0.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
   </ItemGroup>
@@ -53,5 +54,10 @@
     <None Update="runtimes\linux-x86\native\libbass.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+
+    <Content Include="runtimes\linux-x86\native\libbass.so" Link="runtimes\linux-x64\native\libbass.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>runtimes\linux-x64\native\libbass.so</TargetPath>
+    </Content>
   </ItemGroup>
 </Project>

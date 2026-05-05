@@ -20,7 +20,7 @@ public class FileService : IFileService
             FileTypeFilter = [
                 new FilePickerFileType("Audio Files")
                 {
-                    Patterns = ["*.wav", "*.mp3"]
+                    Patterns = ["*.mp3", "*.wav", "*.flac", "*.ogg"]
                 }
             ]
         });

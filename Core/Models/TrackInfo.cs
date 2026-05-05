@@ -4,10 +4,15 @@ namespace AudioStemPlayer.Core.Models;
 
 public class TrackInfo
 {
+    public long Id { get; set; }
     public string FilePath { get; set; } = string.Empty;
     public string Artist { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Album { get; set; } = string.Empty;
+    public string Genre { get; set; } = string.Empty;
+    public int? Year { get; set; }
+    public double DurationSeconds { get; set; }
+    public long FileSizeBytes { get; set; }
     public DateTime DateAdded { get; set; } = DateTime.Now;
 
     public string DisplayName =>
