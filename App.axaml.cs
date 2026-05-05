@@ -32,6 +32,7 @@ public partial class App : Application
             services.AddSingleton<IMetadataReader, MetadataReader>();
             services.AddSingleton<ILibraryService, JsonLibraryService>();
             services.AddSingleton<IDemixingService, DemixingService>();
+            services.AddSingleton<IPlaybackHistoryService, PlaybackHistoryService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();

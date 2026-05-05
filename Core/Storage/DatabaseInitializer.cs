@@ -127,6 +127,16 @@ CREATE TABLE IF NOT EXISTS StemFiles (
     IsMuted INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (JobId) REFERENCES ProcessingJobs(Id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS PlaybackHistory (
+    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+    TrackId INTEGER NULL,
+    FilePath TEXT NOT NULL,
+    Title TEXT NOT NULL DEFAULT '',
+    Artist TEXT NOT NULL DEFAULT '',
+    PlayedAt TEXT NOT NULL,
+    FOREIGN KEY (TrackId) REFERENCES Tracks(Id) ON DELETE SET NULL
+);
 """;
 
     private const string IndexSql = """
@@ -139,5 +149,6 @@ CREATE INDEX IF NOT EXISTS IX_Tracks_Year ON Tracks(Year);
 CREATE INDEX IF NOT EXISTS IX_PlaylistTracks_Playlist_Position ON PlaylistTracks(PlaylistId, Position);
 CREATE INDEX IF NOT EXISTS IX_ProcessingJobs_CreatedAt ON ProcessingJobs(CreatedAt);
 CREATE INDEX IF NOT EXISTS IX_StemFiles_JobId ON StemFiles(JobId);
+CREATE INDEX IF NOT EXISTS IX_PlaybackHistory_PlayedAt ON PlaybackHistory(PlayedAt);
 """;
 }

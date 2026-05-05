@@ -12,6 +12,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
+    private readonly IPlaybackHistoryService _playbackHistoryService;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -43,10 +44,14 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 
     public string? CurrentFilePath { get; private set; }
 
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader)
+    public PlayerPanelViewModel(
+        IAudioPlayerService audioPlayer,
+        IMetadataReader metadataReader,
+        IPlaybackHistoryService playbackHistoryService)
     {
         _audioPlayer = audioPlayer;
         _metadataReader = metadataReader;
+        _playbackHistoryService = playbackHistoryService;
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -101,6 +106,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         if (_audioPlayer.IsLoaded)
         {
             _audioPlayer.Play();
+            _ = RecordPlaybackAsync();
             IsPlaying = true;
             Status = "Playing";
         }
@@ -174,5 +180,20 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     {
         _audioPlayer.PositionChanged -= OnPositionChanged;
         _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
+    }
+
+    private async Task RecordPlaybackAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentFilePath))
+            return;
+
+        try
+        {
+            await _playbackHistoryService.AddPlaybackAsync(CurrentFilePath);
+        }
+        catch
+        {
+            // Playback should not fail just because history persistence failed.
+        }
     }
 }
