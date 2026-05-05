@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 
 namespace AudioStemPlayer.UI.ViewModels;
@@ -10,6 +11,7 @@ namespace AudioStemPlayer.UI.ViewModels;
 public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
     private readonly IAudioPlayerService _audioPlayer;
+    private readonly IMetadataReader _metadataReader;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -33,9 +35,18 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _isLoaded;
 
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer)
+    [ObservableProperty]
+    private string _trackTitle = string.Empty;
+
+    [ObservableProperty]
+    private string _trackArtist = string.Empty;
+
+    public string? CurrentFilePath { get; private set; }
+
+    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader)
     {
         _audioPlayer = audioPlayer;
+        _metadataReader = metadataReader;
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -117,22 +128,46 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         }
     }
 
-    public void LoadTrack(string path)
+    public async void LoadTrack(string path)
     {
         try
         {
-            _audioPlayer.LoadAsync(path);
+            await _audioPlayer.LoadAsync(path);
             IsLoaded = true;
+            CurrentFilePath = path;
             Status = $"Loaded: {Path.GetFileName(path)}";
             TotalTime = TimeSpan.FromSeconds(_audioPlayer.Duration).ToString(@"m\:ss");
             Position = 0;
             CurrentTime = "0:00";
+
+            
+            
+            var trackInfo = await _metadataReader.ReadAsync(path);
+            TrackTitle = string.IsNullOrWhiteSpace(trackInfo.Title)
+                ? Path.GetFileNameWithoutExtension(path)
+                : trackInfo.Title;
+            TrackArtist = trackInfo.Artist ?? string.Empty;
+
             Play();
         }
         catch (Exception ex)
         {
             Status = $"Error loading file: {ex.Message}";
         }
+    }
+
+    public void Unload()
+    {
+        _audioPlayer.Unload();
+        IsLoaded = false;
+        IsPlaying = false;
+        CurrentFilePath = null;
+        Status = "No file loaded";
+        Position = 0;
+        CurrentTime = "0:00";
+        TotalTime = "0:00";
+        TrackTitle = string.Empty;
+        TrackArtist = string.Empty;
     }
 
     public void Dispose()

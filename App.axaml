@@ -57,6 +57,20 @@
 
                     <Color x:Key="ButtonHoverBackgroundColor">#E0E0E0</Color>
                     <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="{StaticResource ButtonHoverBackgroundColor}"/>
+                    
+                    
+                    <Color x:Key="DangerColor">#D32F2F</Color>
+                    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
+
+                    <Color x:Key="DangerHoverColor">#B71C1C</Color>
+                    <SolidColorBrush x:Key="DangerHoverBrush" Color="{StaticResource DangerHoverColor}"/>
+
+                    <Color x:Key="DangerPressedColor">#9A0007</Color>
+                    <SolidColorBrush x:Key="DangerPressedBrush" Color="{StaticResource DangerPressedColor}"/>
+
+                    <SolidColorBrush x:Key="DangerForegroundBrush" Color="White"/>
+                    
+                    
                 </ResourceDictionary>
                 
                 <ResourceDictionary x:Key="Dark">
@@ -100,6 +114,19 @@
 
                     <Color x:Key="ButtonHoverBackgroundColor">#505050</Color>
                     <SolidColorBrush x:Key="ButtonHoverBackgroundBrush" Color="{StaticResource ButtonHoverBackgroundColor}"/>
+                    
+                    <Color x:Key="DangerColor">#D51935</Color>
+                    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}"/>
+
+                    <Color x:Key="DangerHoverColor">#C62828</Color>
+                    <SolidColorBrush x:Key="DangerHoverBrush" Color="{StaticResource DangerHoverColor}"/>
+
+                    <Color x:Key="DangerPressedColor">#8E0000</Color>
+                    <SolidColorBrush x:Key="DangerPressedBrush" Color="{StaticResource DangerPressedColor}"/>
+
+                    <SolidColorBrush x:Key="DangerForegroundBrush" Color="White"/>
+                    
+                    
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>

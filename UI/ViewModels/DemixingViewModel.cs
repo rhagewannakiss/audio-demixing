@@ -14,6 +14,7 @@ public partial class DemixingViewModel : LibraryViewModelBase
 {
     private readonly IFileService _fileService;
     private readonly IDemixingService _demixingService;
+    private CancellationTokenSource? _demixCts;
 
     [ObservableProperty]
     private bool _isProcessing;
@@ -39,7 +40,7 @@ public partial class DemixingViewModel : LibraryViewModelBase
     }
 
     [RelayCommand]
-    private async Task DemixAsync(CancellationToken cancellationToken)
+    private async Task DemixAsync()
     {
         if (SelectedTrack == null || string.IsNullOrEmpty(SelectedTrack.FilePath))
         {
@@ -51,10 +52,13 @@ public partial class DemixingViewModel : LibraryViewModelBase
         StatusMessage = "Started";
         OutputFiles.Clear();
 
+        _demixCts = new CancellationTokenSource();
+        var token = _demixCts.Token;
+
         try
         {
             var progress = new Progress<string>(message => StatusMessage = message);
-            var results = await _demixingService.DemixAsync(SelectedTrack.FilePath, progress, cancellationToken);
+            var results = await _demixingService.DemixAsync(SelectedTrack.FilePath, progress, token);
 
             foreach (var file in results)
                 OutputFiles.Add(file);
@@ -72,15 +76,22 @@ public partial class DemixingViewModel : LibraryViewModelBase
         finally
         {
             IsProcessing = false;
+            _demixCts?.Dispose();
+            _demixCts = null;
         }
     }
 
+    [RelayCommand]
+    private void Cancel()
+    {
+        _demixCts?.Cancel();
+    }
+    
     [RelayCommand]
     private void PlayStem(string filePath)
     {
         if (string.IsNullOrEmpty(filePath)) return;
         StemSelected?.Invoke(filePath);
-        //StatusMessage = $"Playing: {Path.GetFileName(filePath)}";
     }
 
     [RelayCommand]

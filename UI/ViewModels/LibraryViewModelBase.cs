@@ -43,13 +43,9 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
             );
             _allTracks = newDict;
 
-            var sorted = _allTracks.Values.OrderByDescending(t => t.DateAdded).ToList();
-
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Tracks.Clear();
-                foreach (var track in sorted)
-                    Tracks.Add(track);
+                UpdateDisplayedTracks();
             });
         }
         catch (Exception ex)
@@ -60,6 +56,14 @@ public abstract partial class LibraryViewModelBase : ViewModelBase, IDisposable
         {
             _isLoadingLibrary = false;
         }
+    }
+    
+    protected virtual void UpdateDisplayedTracks()
+    {
+        var sorted = _allTracks.Values.OrderByDescending(t => t.DateAdded).ToList();
+        Tracks.Clear();
+        foreach (var track in sorted)
+            Tracks.Add(track);
     }
 
     public virtual void Dispose()

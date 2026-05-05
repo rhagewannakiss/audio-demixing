@@ -41,6 +41,11 @@
                         Classes="primary"
                         Command="{Binding LoadTrackCommand}"
                         Padding="15,5"/>
+                
+                <Button Content="Delete Track"
+                        Classes="danger"
+                        Command="{Binding DeleteTrackCommand}"
+                        Padding="15,5"/>
             </StackPanel>
         </Grid>
         
