@@ -12,6 +12,8 @@ namespace AudioStemPlayer.Core.Services;
 
 public class DemixingService : IDemixingService
 {
+    private const int MaxCapturedOutputLines = 80;
+
     private static readonly string AppDataPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "AudioStemPlayer",
@@ -75,23 +77,26 @@ public class DemixingService : IDemixingService
 
         Task stdoutTask = Task.CompletedTask;
         Task stderrTask = Task.CompletedTask;
+        var capturedOutput = new Queue<string>();
+        var capturedOutputLock = new object();
 
         try
         {
-            ReportProgress(progress, "Starting Demucs processing.");
+            ReportProgress(progress, $"Starting Demucs processing with {process.StartInfo.FileName}.");
             await _processingHistoryService.MarkJobRunningAsync(job.Id, outputDir, cancellationToken);
 
             if (!process.Start())
                 throw new InvalidOperationException("Python/Demucs process did not start.");
 
-            stdoutTask = ReadOutputAsync(process.StandardOutput, progress, cancellationToken);
-            stderrTask = ReadOutputAsync(process.StandardError, progress, cancellationToken);
+            stdoutTask = ReadOutputAsync(process.StandardOutput, progress, capturedOutput, capturedOutputLock, cancellationToken);
+            stderrTask = ReadOutputAsync(process.StandardError, progress, capturedOutput, capturedOutputLock, cancellationToken);
 
             await process.WaitForExitAsync(cancellationToken);
             await Task.WhenAll(stdoutTask, stderrTask);
 
             if (process.ExitCode != 0)
-                throw new InvalidOperationException($"Demucs failed with exit code {process.ExitCode}.");
+                throw new InvalidOperationException(
+                    BuildDemucsFailureMessage(process.ExitCode, capturedOutput, capturedOutputLock));
 
             var stems = FindStableStemPaths(inputFile, outputDir);
             var stemRows = stems.Select(path => new StemFileInfo
@@ -118,8 +123,9 @@ public class DemixingService : IDemixingService
         {
             await KillProcessTreeAsync(process);
             await ObserveReaderTasksAsync(stdoutTask, stderrTask);
-            await _processingHistoryService.MarkJobFailedAsync(job.Id, ex.Message, CancellationToken.None);
-            ReportProgress(progress, $"Demucs error: {ex.Message}");
+            string errorMessage = ex.Message;
+            await _processingHistoryService.MarkJobFailedAsync(job.Id, errorMessage, CancellationToken.None);
+            ReportProgress(progress, $"Demucs error: {errorMessage}");
             throw;
         }
         finally
@@ -145,13 +151,21 @@ public class DemixingService : IDemixingService
         }
     }
 
-    private static async Task ReadOutputAsync(StreamReader reader, IProgress<string>? progress, CancellationToken token)
+    private static async Task ReadOutputAsync(
+        StreamReader reader,
+        IProgress<string>? progress,
+        Queue<string> capturedOutput,
+        object capturedOutputLock,
+        CancellationToken token)
     {
         string? line;
         while ((line = await reader.ReadLineAsync(token)) != null && !token.IsCancellationRequested)
         {
             if (!string.IsNullOrWhiteSpace(line))
+            {
+                CaptureOutputLine(capturedOutput, capturedOutputLock, line);
                 ReportProgress(progress, line);
+            }
         }
     }
 
@@ -178,8 +192,21 @@ public class DemixingService : IDemixingService
         return found.Select(path => path!).ToList();
     }
 
-    private static string GetPythonExecutable() =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "python" : "python3";
+    private static string GetPythonExecutable()
+    {
+        string? configuredPython = Environment.GetEnvironmentVariable("AUDIO_STEM_PLAYER_PYTHON");
+        if (!string.IsNullOrWhiteSpace(configuredPython))
+            return configuredPython;
+
+        string localVenvPython = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Path.Combine(Environment.CurrentDirectory, ".venv", "Scripts", "python.exe")
+            : Path.Combine(Environment.CurrentDirectory, ".venv", "bin", "python");
+
+        if (File.Exists(localVenvPython))
+            return localVenvPython;
+
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "python" : "python3";
+    }
 
     private static int GetWorkerCount() =>
         Math.Clamp(Environment.ProcessorCount / 2, 1, 8);
@@ -224,6 +251,31 @@ public class DemixingService : IDemixingService
         {
             // These are expected when cancellation closes redirected process streams.
         }
+    }
+
+    private static void CaptureOutputLine(Queue<string> capturedOutput, object capturedOutputLock, string line)
+    {
+        lock (capturedOutputLock)
+        {
+            capturedOutput.Enqueue(line);
+            while (capturedOutput.Count > MaxCapturedOutputLines)
+                capturedOutput.Dequeue();
+        }
+    }
+
+    private static string BuildDemucsFailureMessage(int exitCode, Queue<string> capturedOutput, object capturedOutputLock)
+    {
+        string[] outputLines;
+        lock (capturedOutputLock)
+        {
+            outputLines = capturedOutput.ToArray();
+        }
+
+        string message = $"Demucs failed with exit code {exitCode}.";
+        if (outputLines.Length == 0)
+            return message;
+
+        return $"{message}{Environment.NewLine}Recent Demucs output:{Environment.NewLine}{string.Join(Environment.NewLine, outputLines)}";
     }
 
     private static void ReportProgress(IProgress<string>? progress, string message) =>
