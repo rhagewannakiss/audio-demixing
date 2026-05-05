@@ -8,17 +8,16 @@ namespace AudioStemPlayer.Core.Services;
 
 public class AudioPlayerService : IAudioPlayerService
 {
+    private static readonly bool BassInitialized;
+    private static readonly Errors BassInitializationError;
     private int _stream;
     private readonly Timer _positionTimer;
     private int _volume = 75;
 
     static AudioPlayerService()
     {
-        if (!Bass.Init())
-        {
-            throw new InvalidOperationException(
-                "Failed to initialize BASS audio engine. Make sure the native library (libbass.dylib / libbass.so) is present and accessible.");
-        }
+        BassInitialized = Bass.Init();
+        BassInitializationError = Bass.LastError;
     }
 
     public AudioPlayerService()
@@ -85,6 +84,8 @@ public class AudioPlayerService : IAudioPlayerService
 
     public void Load(string filePath)
     {
+        EnsureBassInitialized();
+
         if (!File.Exists(filePath))
             throw new FileNotFoundException("Audio file not found.", filePath);
 
@@ -113,6 +114,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     public void Play()
     {
+        if (!BassInitialized) return;
         if (_stream == 0) return;
         Bass.ChannelPlay(_stream);
         _positionTimer.Start();
@@ -120,6 +122,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     public void Pause()
     {
+        if (!BassInitialized) return;
         if (_stream == 0) return;
         Bass.ChannelPause(_stream);
         _positionTimer.Stop();
@@ -127,6 +130,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     public void Stop()
     {
+        if (!BassInitialized) return;
         if (_stream == 0) return;
         Bass.ChannelStop(_stream);
         _positionTimer.Stop();
@@ -136,7 +140,7 @@ public class AudioPlayerService : IAudioPlayerService
     public void Unload()
     {
         _positionTimer.Stop();
-        if (_stream != 0)
+        if (BassInitialized && _stream != 0)
         {
             Bass.StreamFree(_stream);
             _stream = 0;
@@ -145,6 +149,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     private void OnPositionTimerElapsed(object? sender, ElapsedEventArgs e)
     {
+        if (!BassInitialized) return;
         if (_stream == 0) return;
         double pos = Position;
         PositionChanged?.Invoke(this, pos);
@@ -155,5 +160,15 @@ public class AudioPlayerService : IAudioPlayerService
         _positionTimer?.Stop();
         _positionTimer?.Dispose();
         Unload();
+    }
+
+    private static void EnsureBassInitialized()
+    {
+        if (BassInitialized)
+            return;
+
+        throw new InvalidOperationException(
+            $"Failed to initialize BASS audio engine. BASS error: {BassInitializationError}. " +
+            "On Linux, make sure an ALSA/PulseAudio/PipeWire default output device is available.");
     }
 }
