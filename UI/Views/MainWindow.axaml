@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+        x:Class="AudioStemPlayer.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="test"
+        MinWidth="1200" MinHeight="400"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid ColumnDefinitions="200, 1, *, 1, 400">
+        <ListBox ItemsSource="{Binding Pages}" 
+                 SelectedItem="{Binding SelectedPage}"
+                 Background="{DynamicResource TabsBackgroundBrush}"
+                 BorderThickness="0"
+                 Margin="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border HorizontalAlignment="Stretch">
+                        <TextBlock Text="{Binding}" 
+                                Foreground="{DynamicResource TextBrush}" 
+                                Margin="10,5"/>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Border Grid.Column="1"
+                Background="{DynamicResource SeparatorBrush}"
+                Width="1"
+                />
+
+        <ContentControl Grid.Column="2"
+                        Content="{Binding CurrentPageViewModel}"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        Padding="0"/>
+
+        <Border Grid.Column="3"
+                Background="{DynamicResource SeparatorBrush}"
+                Width="1"
+                HorizontalAlignment="Left"/>
+
+        <ContentControl Grid.Column="4"
+                        Content="{Binding PlayerPanelViewModel}"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        Padding="10"/>
+    </Grid>
+</Window>

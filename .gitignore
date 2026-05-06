@@ -6,3 +6,11 @@ build/
 *.png
 compile_commands.json
 .cache
+
+bin/
+obj/
+.idea/
+.DS_Store
+
+*.tmp
+/temp/

@@ -1,0 +1,22 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+        x:Class="AudioStemPlayer.UI.Views.PlaylistNameDialog"
+        Title="New Playlist Name"
+        Width="350" Height="150"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        x:CompileBindings="False">
+
+    <Grid RowDefinitions="*, Auto" Margin="15">
+        <TextBox Grid.Row="0" Text="{Binding PlaylistName}" Watermark="Playlist name" 
+                 VerticalAlignment="Center"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" 
+                    Spacing="10" Margin="0,10,0,0">
+            <Button Content="OK" Classes="primary" Command="{Binding OkCommand}" 
+                    IsDefault="True"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>

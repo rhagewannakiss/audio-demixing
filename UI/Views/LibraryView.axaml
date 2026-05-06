@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
+             x:Class="AudioStemPlayer.UI.Views.LibraryView"
+             x:DataType="vm:LibraryViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, Auto, *">
+        <Grid Grid.Row="0"
+              Margin="0"
+              Background="{DynamicResource WindowBackgroundBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Text="Audio Library"
+                       VerticalAlignment="Center"
+                       Margin="20,20,0,20"
+                       Foreground="{DynamicResource TextBrush}"
+                       FontFamily="Helvetica Bold"
+                       FontSize="22"/>
+
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Spacing="10"
+                        Margin="0,5,10,5">
+                
+                <TextBlock Text="Search:"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextBrush}"/>
+                
+                <TextBox Text="{Binding SearchText}"
+                         Watermark="Start typing"
+                         MinWidth="200"
+                         VerticalAlignment="Center"/>
+                
+                <Button Content="Load Track"
+                        Classes="primary"
+                        Command="{Binding LoadTrackCommand}"
+                        Padding="15,5"/>
+
+                <Button Content="Delete Track"
+                        Classes="danger"
+                        Command="{Binding DeleteTrackCommand}"
+                        IsEnabled="{Binding HasSelectedTrack}"
+                        Padding="15,5"/>
+
+                <Button Content="Add to Playlist"
+                        Classes="primary"
+                        Command="{Binding AddToPlaylistCommand}"
+                        IsEnabled="{Binding HasSelectedTrack}"
+                        Padding="15,5"/>
+            </StackPanel>
+        </Grid>
+        
+        <Rectangle Grid.Row="1"
+                   Height="1"
+                   Fill="{DynamicResource SeparatorBrush}"
+                   HorizontalAlignment="Stretch" />
+        
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding Tracks}"
+                 SelectedItem="{Binding SelectedTrack}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Margin="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding DisplayName}"
+                               Foreground="{DynamicResource TextBrush}"
+                               Margin="10,5" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>
