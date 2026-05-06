@@ -2,7 +2,8 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using AudioStemPlayer.Core.Models;
-using TagLib;
+using System.Linq;
+
 
 namespace AudioStemPlayer.Core.Services;
 
@@ -43,6 +44,25 @@ public class MetadataReader : IMetadataReader
                 track.DurationSeconds = 0;
             }
             return track;
+        });
+    }
+    
+    
+    public Task<Stream?> GetCoverArtAsync(string filePath)
+    {
+        return Task.Run(() =>
+        {
+            try
+            {
+                using var tagFile = TagLib.File.Create(filePath);
+                var picture = tagFile.Tag.Pictures.FirstOrDefault();
+                if (picture != null && picture.Data.Count > 0)
+                    return (Stream?)new MemoryStream(picture.Data.ToArray());
+            }
+            catch
+            {
+            }
+            return null;
         });
     }
 }

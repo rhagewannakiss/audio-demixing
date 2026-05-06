@@ -12,6 +12,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private LibraryViewModel? _cachedLibraryVm;
     private DemixingViewModel? _cachedDemixingVm;
     private HistoryViewModel? _cachedHistoryVm;
+    private PlaylistsViewModel? _cachedPlaylistsVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -33,10 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         UpdateCurrentPage();
     }
 
-    partial void OnSelectedPageChanged(PageType value)
-    {
-        UpdateCurrentPage();
-    }
+    partial void OnSelectedPageChanged(PageType value) => UpdateCurrentPage();
 
     private void UpdateCurrentPage()
     {
@@ -69,6 +67,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             _cachedHistoryVm.LoadHistoryCommand.Execute(null);
             CurrentPageViewModel = _cachedHistoryVm;
         }
+        else if (SelectedPage == PageType.Playlists)
+        {
+            if (_cachedPlaylistsVm == null)
+            {
+                _cachedPlaylistsVm = _serviceProvider.GetRequiredService<PlaylistsViewModel>();
+                _cachedPlaylistsVm.TrackPlayRequested += OnPlaylistsPlayRequested;
+            }
+            CurrentPageViewModel = _cachedPlaylistsVm;
+        }
         else
         {
             CurrentPageViewModel = null;
@@ -78,9 +85,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private void OnTrackRemoved(string removedPath)
     {
         if (_playerPanelViewModel.CurrentFilePath == removedPath)
-        {
             _playerPanelViewModel.Unload();
-        }
     }
 
     private void OnHistoryPlayRequested(string filePath)
@@ -90,11 +95,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             _cachedLibraryVm.SelectedTrack = null;
     }
 
+    private void OnPlaylistsPlayRequested(string filePath)
+    {
+        _playerPanelViewModel.LoadTrack(filePath);
+        if (_cachedLibraryVm != null)
+            _cachedLibraryVm.SelectedTrack = null;
+    }
+
     public void Dispose()
     {
-        if (_cachedLibraryVm != null)
-            _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
-        if (_cachedHistoryVm != null)
-            _cachedHistoryVm.TrackPlayRequested -= OnHistoryPlayRequested;
+        if (_cachedLibraryVm != null) _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
+        if (_cachedHistoryVm != null) _cachedHistoryVm.TrackPlayRequested -= OnHistoryPlayRequested;
+        if (_cachedPlaylistsVm != null) _cachedPlaylistsVm.TrackPlayRequested -= OnPlaylistsPlayRequested;
     }
 }

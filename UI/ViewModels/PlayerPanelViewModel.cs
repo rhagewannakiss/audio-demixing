@@ -4,6 +4,7 @@ using AudioStemPlayer.Core.Services;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
 namespace AudioStemPlayer.UI.ViewModels;
@@ -12,7 +13,6 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
-    private readonly IDialogService _dialogService;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -42,15 +42,21 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _trackArtist = string.Empty;
 
+    [ObservableProperty]
+    private Bitmap? _coverBitmap;
+
+    [ObservableProperty]
+    private bool _hasCover;
+
+    [ObservableProperty]
+    private bool _hasNoCover = true;
+
     public string? CurrentFilePath { get; private set; }
 
-    public event Action<string>? TrackLoadFailed;
-
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader, IDialogService dialogService)
+    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader)
     {
         _audioPlayer = audioPlayer;
         _metadataReader = metadataReader;
-        _dialogService = dialogService;
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -81,10 +87,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         });
     }
 
-    partial void OnVolumeChanged(double value)
-    {
-        _audioPlayer.Volume = (int)value;
-    }
+    partial void OnVolumeChanged(double value) => _audioPlayer.Volume = (int)value;
 
     partial void OnPositionChanged(double value)
     {
@@ -92,10 +95,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         {
             _audioPlayer.Position = value;
             if (_audioPlayer.Duration > 0)
-            {
-                var current = TimeSpan.FromSeconds(value * _audioPlayer.Duration);
-                CurrentTime = current.ToString(@"m\:ss");
-            }
+                CurrentTime = TimeSpan.FromSeconds(value * _audioPlayer.Duration).ToString(@"m\:ss");
         }
     }
 
@@ -151,11 +151,11 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
             TrackArtist = trackInfo.Artist ?? string.Empty;
 
             Play();
+            _ = LoadCoverAsync(path);
         }
         catch (Exception ex)
         {
-            await _dialogService.ShowErrorAsync("Playback Error", $"Cannot load file: {ex.Message}\nTrack will be deleted from library");
-            TrackLoadFailed?.Invoke(path);
+            Status = $"Error loading file: {ex.Message}";
         }
     }
 
@@ -171,11 +171,41 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         TotalTime = "0:00";
         TrackTitle = string.Empty;
         TrackArtist = string.Empty;
+        CoverBitmap = null;
     }
 
     public void Dispose()
     {
         _audioPlayer.PositionChanged -= OnPositionChanged;
         _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
+    }
+
+    private async Task LoadCoverAsync(string filePath)
+    {
+        try
+        {
+            var stream = await _metadataReader.GetCoverArtAsync(filePath);
+            if (stream != null)
+            {
+                using (stream)
+                {
+                    CoverBitmap = new Bitmap(stream);
+                }
+            }
+            else
+            {
+                CoverBitmap = null;
+            }
+        }
+        catch
+        {
+            CoverBitmap = null;
+        }
+    }
+
+    partial void OnCoverBitmapChanged(Bitmap? value)
+    {
+        HasCover = value != null;
+        HasNoCover = value == null;
     }
 }
