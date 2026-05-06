@@ -18,6 +18,16 @@ public class DialogService : IDialogService
         await dialog.ShowDialog<bool>(mainWindow);
         return ((ConfirmationDialogViewModel)dialog.DataContext!).Result;
     }
+    
+    public async Task ShowErrorAsync(string title, string message)
+    {
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null)
+            return;
+        
+        var dialog = new ConfirmationDialog(title, message, showCancel: false);
+        await dialog.ShowDialog<bool>(mainWindow);
+    }
 
     private static Window? GetMainWindow()
     {

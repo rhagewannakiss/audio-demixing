@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AudioStemPlayer.Core.Models;
 using System;
@@ -11,6 +12,7 @@ public interface ILibraryService
     Task AddTrackAsync(TrackInfo track);
     Task RemoveTrackAsync(string filePath);
     Task SaveTracksAsync(IEnumerable<TrackInfo> tracks);
-    
-    event EventHandler? LibraryChanged; 
+    Task<TrackInfo?> GetTrackByPathAsync(string filePath, CancellationToken cancellationToken = default);
+    Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default);
+    event EventHandler? LibraryChanged;
 }

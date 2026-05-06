@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace AudioStemPlayer.Core.Models;
 
@@ -14,6 +15,14 @@ public class ProcessingJobInfo
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? StartedAt { get; set; }
     public DateTime? FinishedAt { get; set; }
+
+    public string FileName => string.IsNullOrWhiteSpace(InputFilePath) 
+        ? string.Empty 
+        : Path.GetFileName(InputFilePath);
+
+    public string TrackDisplayName { get; set; } = string.Empty;
+
+    public string DisplayName => string.IsNullOrWhiteSpace(TrackDisplayName) ? FileName : TrackDisplayName;
 }
 
 public static class ProcessingStatuses

@@ -27,9 +27,18 @@
             <Button Content="Yes"
                     Classes="primary"
                     Command="{Binding YesCommand}"
+                    IsVisible="{Binding HasCancel}"
                     Width="70"/>
+            
             <Button Content="No"
                     Command="{Binding NoCommand}"
+                    IsVisible="{Binding HasCancel}"
+                    Width="70"/>
+
+            <Button Content="OK"
+                    Classes="primary"
+                    Command="{Binding OkCommand}"
+                    IsVisible="{Binding !HasCancel}"
                     Width="70"/>
         </StackPanel>
     </Grid>

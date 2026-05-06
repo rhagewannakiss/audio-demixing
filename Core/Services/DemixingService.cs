@@ -18,22 +18,12 @@ public class DemixingService : IDemixingService
         "Separated");
 
     private readonly IProcessingHistoryService _processingHistoryService;
-    private readonly JsonLibraryService _libraryService;
+    private readonly ILibraryService _libraryService;
 
-    public DemixingService()
-        : this(new ProcessingHistoryService(), new JsonLibraryService())
+    public DemixingService(IProcessingHistoryService processingHistoryService, ILibraryService libraryService)
     {
-    }
-
-    public DemixingService(IProcessingHistoryService processingHistoryService)
-        : this(processingHistoryService, new JsonLibraryService())
-    {
-    }
-
-    public DemixingService(IProcessingHistoryService processingHistoryService, JsonLibraryService libraryService)
-    {
-        _processingHistoryService = processingHistoryService;
-        _libraryService = libraryService;
+        _processingHistoryService = processingHistoryService ?? throw new ArgumentNullException(nameof(processingHistoryService));
+        _libraryService = libraryService ?? throw new ArgumentNullException(nameof(libraryService));
     }
 
     public async Task<IReadOnlyList<string>> DemixAsync(string inputFile, IProgress<string> progress, CancellationToken cancellationToken)

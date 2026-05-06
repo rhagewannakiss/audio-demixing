@@ -12,6 +12,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
+    private readonly IDialogService _dialogService;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -43,10 +44,13 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 
     public string? CurrentFilePath { get; private set; }
 
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader)
+    public event Action<string>? TrackLoadFailed;
+
+    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader, IDialogService dialogService)
     {
         _audioPlayer = audioPlayer;
         _metadataReader = metadataReader;
+        _dialogService = dialogService;
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -140,8 +144,6 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
             Position = 0;
             CurrentTime = "0:00";
 
-            
-            
             var trackInfo = await _metadataReader.ReadAsync(path);
             TrackTitle = string.IsNullOrWhiteSpace(trackInfo.Title)
                 ? Path.GetFileNameWithoutExtension(path)
@@ -152,7 +154,8 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            Status = $"Error loading file: {ex.Message}";
+            await _dialogService.ShowErrorAsync("Playback Error", $"Cannot load file: {ex.Message}\nTrack will be deleted from library");
+            TrackLoadFailed?.Invoke(path);
         }
     }
 
