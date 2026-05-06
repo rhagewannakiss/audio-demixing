@@ -64,7 +64,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (_cachedHistoryVm == null)
             {
                 _cachedHistoryVm = _serviceProvider.GetRequiredService<HistoryViewModel>();
+                _cachedHistoryVm.TrackPlayRequested += OnHistoryPlayRequested;
             }
+            _cachedHistoryVm.LoadHistoryCommand.Execute(null);
             CurrentPageViewModel = _cachedHistoryVm;
         }
         else
@@ -81,9 +83,18 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private void OnHistoryPlayRequested(string filePath)
+    {
+        _playerPanelViewModel.LoadTrack(filePath);
+        if (_cachedLibraryVm != null)
+            _cachedLibraryVm.SelectedTrack = null;
+    }
+
     public void Dispose()
     {
         if (_cachedLibraryVm != null)
             _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
+        if (_cachedHistoryVm != null)
+            _cachedHistoryVm.TrackPlayRequested -= OnHistoryPlayRequested;
     }
 }

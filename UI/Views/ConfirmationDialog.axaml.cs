@@ -10,9 +10,9 @@ public partial class ConfirmationDialog : Window
         InitializeComponent();
     }
 
-    public ConfirmationDialog(string title, string message) : this()
+    public ConfirmationDialog(string title, string message, bool showCancel = true) : this()
     {
-        var vm = new ConfirmationDialogViewModel(this)
+        var vm = new ConfirmationDialogViewModel(this, showCancel)
         {
             Title = title,
             Message = message

@@ -33,6 +33,7 @@ public partial class App : Application
             services.AddSingleton<ILibraryService, JsonLibraryService>();
             services.AddSingleton<IDemixingService, DemixingService>();
             services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IProcessingHistoryService, ProcessingHistoryService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
