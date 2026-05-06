@@ -13,6 +13,7 @@ public partial class LibraryViewModel : LibraryViewModelBase
     private readonly IFileService _fileService;
     private readonly IMetadataReader _metadataReader;
     private readonly IDialogService _dialogService;
+    private readonly IPlaylistService _playlistService;
     private bool _isRestoringSelection;
 
     [ObservableProperty]
@@ -32,17 +33,21 @@ public partial class LibraryViewModel : LibraryViewModelBase
         IFileService fileService,
         IMetadataReader metadataReader,
         ILibraryService libraryService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPlaylistService playlistService)
         : base(libraryService)
     {
         _fileService = fileService;
         _metadataReader = metadataReader;
         _dialogService = dialogService;
+        _playlistService = playlistService;
     }
 
     partial void OnSelectedTrackChanged(TrackInfo? value)
     {
+        OnPropertyChanged(nameof(HasSelectedTrack));
         DeleteTrackCommand.NotifyCanExecuteChanged();
+        AddToPlaylistCommand.NotifyCanExecuteChanged();
         if (!_isRestoringSelection && value != null)
             TrackSelected?.Invoke(value.FilePath);
     }
@@ -123,5 +128,33 @@ public partial class LibraryViewModel : LibraryViewModelBase
     }
 
     partial void OnSearchTextChanged(string value) => UpdateDisplayedTracks();
-    
+
+
+
+
+
+
+    [RelayCommand(CanExecute = nameof(HasSelectedTrack))]
+    private async Task AddToPlaylistAsync()
+    {
+        if (SelectedTrack == null) return;
+        var playlists = await _playlistService.GetPlaylistsAsync();
+        if (playlists.Count == 0)
+        {
+            StatusMessage = "No playlists available. Create one first.";
+        }
+
+        var selectedPlaylist = await _dialogService.ShowPlaylistPickerAsync(playlists);
+        if (selectedPlaylist == null) return;
+
+        try
+        {
+            await _playlistService.AddTrackToPlaylistAsync(selectedPlaylist.Id, SelectedTrack.Id);
+            StatusMessage = $"Added '{SelectedTrack.DisplayName}' to '{selectedPlaylist.Name}'";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error adding to playlist: {ex.Message}";
+        }
+    }
 }

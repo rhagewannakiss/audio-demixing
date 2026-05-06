@@ -28,7 +28,7 @@
                         Spacing="10"
                         Margin="0,5,10,5">
                 
-                <TextBlock Text="Search track:"
+                <TextBlock Text="Search:"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource TextBrush}"/>
                 
@@ -41,10 +41,17 @@
                         Classes="primary"
                         Command="{Binding LoadTrackCommand}"
                         Padding="15,5"/>
-                
+
                 <Button Content="Delete Track"
                         Classes="danger"
                         Command="{Binding DeleteTrackCommand}"
+                        IsEnabled="{Binding HasSelectedTrack}"
+                        Padding="15,5"/>
+
+                <Button Content="Add to Playlist"
+                        Classes="primary"
+                        Command="{Binding AddToPlaylistCommand}"
+                        IsEnabled="{Binding HasSelectedTrack}"
                         Padding="15,5"/>
             </StackPanel>
         </Grid>

@@ -34,9 +34,9 @@
                 HorizontalAlignment="Center"
                 Width="300" Height="300"
                 Margin="0,0,0,5">
-            <Viewbox Stretch="Uniform" MaxWidth="80" MaxHeight="80">
-                <TextBlock Text="" 
-                           FontSize="60"
+            <Viewbox Stretch="Uniform" MaxWidth="100" MaxHeight="100">
+                <TextBlock Text="♫"
+                           FontSize="100"
                            Foreground="{DynamicResource TextBrush}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"/>
@@ -63,8 +63,6 @@
                     IsEnabled="{Binding IsLoaded}"/>
             <Button Content="Pause" Command="{Binding PauseCommand}" 
                     IsEnabled="{Binding IsPlaying}"/>
-            <Button Content="Stop" Command="{Binding StopCommand}" 
-                    IsEnabled="{Binding IsLoaded}"/>
         </StackPanel>
         
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
