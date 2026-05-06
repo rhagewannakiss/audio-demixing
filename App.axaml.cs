@@ -34,11 +34,13 @@ public partial class App : Application
             services.AddSingleton<IDemixingService, DemixingService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IProcessingHistoryService, ProcessingHistoryService>();
+            services.AddSingleton<IPlaylistService, PlaylistService>();  
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
             services.AddSingleton<DemixingViewModel>();
             services.AddSingleton<HistoryViewModel>();
+            services.AddSingleton<PlaylistsViewModel>();   
             services.AddSingleton<ConfirmationDialogViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 
