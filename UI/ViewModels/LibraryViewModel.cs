@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
 using AudioStemPlayer.Core.Models;
+using System.Collections.Generic;
+using Avalonia.Platform.Storage;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
@@ -68,6 +70,25 @@ public partial class LibraryViewModel : LibraryViewModelBase
         await _libraryService.AddTrackAsync(track);
 
         StatusMessage = $"Added: {track.DisplayName}";
+    }
+    
+    public async Task LoadFromDrop(IReadOnlyList<IStorageItem> items)
+    {
+        var paths = await _fileService.GetAudioFilesFromItemsAsync(items);
+        if (paths.Count == 0) return;
+
+        StatusMessage = $"Adding {paths.Count} files...";
+
+        var tasks = paths.Select(async p =>
+        {
+            var track = await _metadataReader.ReadAsync(p);
+            track.DateAdded = DateTime.Now;
+            return track;
+        });
+        var tracks = await Task.WhenAll(tasks);
+
+        await _libraryService.SaveTracksAsync(tracks);
+        StatusMessage = $"Added {tracks.Length} file(s).";
     }
 
     [RelayCommand(CanExecute = nameof(HasSelectedTrack))]

@@ -3,7 +3,8 @@
              xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
              x:Class="AudioStemPlayer.UI.Views.LibraryView"
              x:DataType="vm:LibraryViewModel"
-             Background="{DynamicResource WindowBackgroundBrush}">
+             Background="{DynamicResource WindowBackgroundBrush}"
+             DragDrop.AllowDrop="True">
 
     <Grid RowDefinitions="Auto, Auto, *">
         <Grid Grid.Row="0"

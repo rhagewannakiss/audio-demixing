@@ -1,11 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Models;
 using AudioStemPlayer.Core.Services;
+using Avalonia.Platform.Storage;
+using System.Collections.Generic;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
@@ -14,6 +16,8 @@ public partial class PlaylistsViewModel : ViewModelBase
     private readonly IPlaylistService _playlistService;
     private readonly ILibraryService _libraryService;
     private readonly IDialogService _dialogService;
+    private readonly IFileService _fileService;
+    private readonly IMetadataReader _metadataReader;
 
     [ObservableProperty]
     private ObservableCollection<PlaylistInfo> _playlists = [];
@@ -34,11 +38,15 @@ public partial class PlaylistsViewModel : ViewModelBase
     public PlaylistsViewModel(
         IPlaylistService playlistService,
         ILibraryService libraryService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IFileService fileService,
+        IMetadataReader metadataReader)
     {
         _playlistService = playlistService;
         _libraryService = libraryService;
         _dialogService = dialogService;
+        _fileService = fileService;
+        _metadataReader = metadataReader;
 
         _playlistService.PlaylistsChanged += OnPlaylistsChanged;
         _ = LoadPlaylistsAsync();
@@ -78,7 +86,7 @@ public partial class PlaylistsViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(name)) return;
         try
         {
-            await _playlistService.CreatePlaylistAsync(name);
+            await _playlistService.CreatePlaylistAsync(name.Trim());
             await LoadPlaylistsAsync();
         }
         catch (Exception ex)
@@ -152,6 +160,45 @@ public partial class PlaylistsViewModel : ViewModelBase
         {
             StatusMessage = $"Error removing track: {ex.Message}";
         }
+    }
+
+    public async Task ImportDroppedFiles(IReadOnlyList<IStorageItem> items)
+    {
+        if (SelectedPlaylist == null)
+        {
+            StatusMessage = "Select a playlist first.";
+            return;
+        }
+
+        var paths = await _fileService.GetAudioFilesFromItemsAsync(items);
+        if (paths.Count == 0) return;
+
+        StatusMessage = $"Adding {paths.Count} files to playlist...";
+
+        var tracks = new List<TrackInfo>();
+        foreach (var path in paths)
+        {
+            var track = await _metadataReader.ReadAsync(path);
+            track.DateAdded = DateTime.Now;
+            tracks.Add(track);
+        }
+
+        await _libraryService.SaveTracksAsync(tracks);
+
+        var savedPaths = tracks.Select(t => t.FilePath).ToList();
+        var savedTracks = await _libraryService.GetTracksByPathsAsync(savedPaths);
+
+        foreach (var track in savedTracks)
+        {
+            try
+            {
+                await _playlistService.AddTrackToPlaylistAsync(SelectedPlaylist.Id, track.Id);
+            }
+            catch { }
+        }
+
+        await LoadPlaylistTracksAsync();
+        StatusMessage = $"Added {savedTracks.Count} file(s) to '{SelectedPlaylist.Name}'.";
     }
 
     private async void OnPlaylistsChanged(object? sender, EventArgs e) => await LoadPlaylistsAsync();

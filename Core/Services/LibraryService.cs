@@ -166,6 +166,59 @@ WHERE FilePath = $filePath;
         return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
     }
 
+    public async Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        await _databaseInitializer.InitializeAsync(cancellationToken);
+        await using var connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
+FROM Tracks
+WHERE Id = $id;
+""";
+        command.Parameters.AddWithValue("$id", id);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
+    }
+
+    public async Task<IReadOnlyList<TrackInfo>> GetTracksByPathsAsync(IReadOnlyList<string> filePaths)
+    {
+        if (filePaths == null || filePaths.Count == 0)
+            return Array.Empty<TrackInfo>();
+
+        await _databaseInitializer.InitializeAsync();
+
+        var parameters = new List<SqliteParameter>();
+        var paramNames = new List<string>();
+        for (int i = 0; i < filePaths.Count; i++)
+        {
+            string pName = $"$p{i}";
+            paramNames.Add(pName);
+            parameters.Add(new SqliteParameter(pName, filePaths[i]));
+        }
+
+        string inClause = string.Join(", ", paramNames);
+        string sql = $"""
+SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
+FROM Tracks
+WHERE FilePath IN ({inClause})
+ORDER BY DateAdded DESC, Id DESC;
+""";
+
+        await using var connection = await _connectionFactory.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        foreach (var p in parameters)
+            command.Parameters.Add(p);
+
+        var tracks = new List<TrackInfo>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            tracks.Add(ReadTrack(reader));
+        return tracks;
+    }
+
     private static async Task<TrackInfo?> ReadTrackByPathAsync(
         SqliteConnection connection,
         string filePath,
@@ -180,22 +233,6 @@ FROM Tracks
 WHERE FilePath = $filePath;
 """;
         command.Parameters.AddWithValue("$filePath", filePath);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
-    }
-
-    public async Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default)
-    {
-        await _databaseInitializer.InitializeAsync(cancellationToken);
-        await using var connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = """
-SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
-FROM Tracks
-WHERE Id = $id;
-""";
-        command.Parameters.AddWithValue("$id", id);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
