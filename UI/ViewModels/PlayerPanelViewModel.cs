@@ -2,7 +2,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -13,6 +15,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
+    private readonly IDialogService _dialogService;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -53,10 +56,20 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 
     public string? CurrentFilePath { get; private set; }
 
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader)
+    private List<string> _queue = new();
+    private int _currentIndex = -1;
+
+    public bool HasPreviousTrack => _queue.Count > 0 && _currentIndex > 0;
+    public bool HasNextTrack => _queue.Count > 0 && _currentIndex < _queue.Count - 1;
+    public bool IsNotPlaying => !IsPlaying;
+
+    public event Action<string>? TrackChanged;
+
+    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader, IDialogService dialogService)
     {
         _audioPlayer = audioPlayer;
         _metadataReader = metadataReader;
+        _dialogService = dialogService;
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -68,23 +81,31 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
             _isUpdatingFromPlayer = true;
             Position = position;
             if (_audioPlayer.Duration > 0)
-            {
-                var current = TimeSpan.FromSeconds(position * _audioPlayer.Duration);
-                CurrentTime = current.ToString(@"m\:ss");
-            }
+                CurrentTime = TimeSpan.FromSeconds(position * _audioPlayer.Duration).ToString(@"m\:ss");
             _isUpdatingFromPlayer = false;
         });
     }
 
     private void OnPlaybackEnded(object? sender, EventArgs e)
     {
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.UIThread.Post(() => PlayNext());
+    }
+
+    private void PlayNext()
+    {
+        if (HasNextTrack)
+        {
+            _currentIndex++;
+            _ = LoadAndPlaySingle(_queue[_currentIndex]);
+        }
+        else
         {
             IsPlaying = false;
             Position = 0;
             CurrentTime = "0:00";
             Status = "Playback ended";
-        });
+            NotifyNavigationStateChanged();
+        }
     }
 
     partial void OnVolumeChanged(double value) => _audioPlayer.Volume = (int)value;
@@ -97,6 +118,13 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
             if (_audioPlayer.Duration > 0)
                 CurrentTime = TimeSpan.FromSeconds(value * _audioPlayer.Duration).ToString(@"m\:ss");
         }
+    }
+
+    [RelayCommand]
+    private void PlayPause()
+    {
+        if (IsPlaying) Pause();
+        else Play();
     }
 
     [RelayCommand]
@@ -132,7 +160,40 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         }
     }
 
+    [RelayCommand]
+    private void Previous()
+    {
+        if (!HasPreviousTrack) return;
+        _currentIndex--;
+        _ = LoadAndPlaySingle(_queue[_currentIndex]);
+    }
+
+    [RelayCommand]
+    private void Next()
+    {
+        if (!HasNextTrack) return;
+        _currentIndex++;
+        _ = LoadAndPlaySingle(_queue[_currentIndex]);
+    }
+
     public async void LoadTrack(string path)
+    {
+        _queue.Clear();
+        _currentIndex = -1;
+        NotifyNavigationStateChanged();
+        await LoadAndPlaySingle(path);
+    }
+
+    public void SetQueue(IEnumerable<string> filePaths, int startIndex)
+    {
+        _queue = filePaths.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        if (_queue.Count == 0) return;
+        _currentIndex = Math.Clamp(startIndex, 0, _queue.Count - 1);
+        NotifyNavigationStateChanged();
+        _ = LoadAndPlaySingle(_queue[_currentIndex]);
+    }
+
+    private async Task LoadAndPlaySingle(string path)
     {
         try
         {
@@ -152,32 +213,16 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 
             Play();
             _ = LoadCoverAsync(path);
+
+            TrackChanged?.Invoke(path);
+            NotifyNavigationStateChanged();
         }
         catch (Exception ex)
         {
             Status = $"Error loading file: {ex.Message}";
+            NotifyNavigationStateChanged();
+            await _dialogService.ShowConfirmationAsync("Playback Error", $"Cannot load file:\n{ex.Message}", false);
         }
-    }
-
-    public void Unload()
-    {
-        _audioPlayer.Unload();
-        IsLoaded = false;
-        IsPlaying = false;
-        CurrentFilePath = null;
-        Status = "No file loaded";
-        Position = 0;
-        CurrentTime = "0:00";
-        TotalTime = "0:00";
-        TrackTitle = string.Empty;
-        TrackArtist = string.Empty;
-        CoverBitmap = null;
-    }
-
-    public void Dispose()
-    {
-        _audioPlayer.PositionChanged -= OnPositionChanged;
-        _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
     }
 
     private async Task LoadCoverAsync(string filePath)
@@ -207,5 +252,40 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     {
         HasCover = value != null;
         HasNoCover = value == null;
+    }
+
+    partial void OnIsPlayingChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsNotPlaying));
+    }
+
+    public void Unload()
+    {
+        _audioPlayer.Unload();
+        IsLoaded = false;
+        IsPlaying = false;
+        CurrentFilePath = null;
+        Status = "No file loaded";
+        Position = 0;
+        CurrentTime = "0:00";
+        TotalTime = "0:00";
+        TrackTitle = string.Empty;
+        TrackArtist = string.Empty;
+        CoverBitmap = null;
+        _queue.Clear();
+        _currentIndex = -1;
+        NotifyNavigationStateChanged();
+    }
+
+    public void Dispose()
+    {
+        _audioPlayer.PositionChanged -= OnPositionChanged;
+        _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
+    }
+
+    private void NotifyNavigationStateChanged()
+    {
+        OnPropertyChanged(nameof(HasPreviousTrack));
+        OnPropertyChanged(nameof(HasNextTrack));
     }
 }

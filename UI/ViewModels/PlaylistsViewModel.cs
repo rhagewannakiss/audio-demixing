@@ -101,7 +101,7 @@ public partial class PlaylistsViewModel : ViewModelBase
         if (SelectedPlaylist == null) return;
         bool confirm = await _dialogService.ShowConfirmationAsync(
             "Delete Playlist",
-            $"Are you sure you want to delete '{SelectedPlaylist.Name}'?");
+            $"Are you sure you want to delete '{SelectedPlaylist.Name}'?", true);
         if (!confirm) return;
 
         try
@@ -142,8 +142,8 @@ public partial class PlaylistsViewModel : ViewModelBase
     [RelayCommand]
     private void PlayTrack(TrackInfo? track)
     {
-        if (track != null && !string.IsNullOrEmpty(track.FilePath))
-            TrackPlayRequested?.Invoke(track.FilePath);
+        if (track == null || string.IsNullOrEmpty(track.FilePath)) return;
+        TrackPlayRequested?.Invoke(track.FilePath);
     }
 
     [RelayCommand]
@@ -154,6 +154,7 @@ public partial class PlaylistsViewModel : ViewModelBase
         {
             await _playlistService.RemoveTrackFromPlaylistAsync(SelectedPlaylist.Id, track.Id);
             PlaylistTracks.Remove(track);
+            await LoadPlaylistTracksAsync();
             StatusMessage = $"Removed '{track.DisplayName}'";
         }
         catch (Exception ex)
@@ -199,6 +200,29 @@ public partial class PlaylistsViewModel : ViewModelBase
 
         await LoadPlaylistTracksAsync();
         StatusMessage = $"Added {savedTracks.Count} file(s) to '{SelectedPlaylist.Name}'.";
+    }
+
+
+    public async Task ReorderTrack(TrackInfo movedTrack, int newIndex)
+    {
+        if (SelectedPlaylist == null || movedTrack == null) return;
+        int oldIndex = PlaylistTracks.IndexOf(movedTrack);
+        try
+        {
+            
+            if (oldIndex == -1) return;
+
+            PlaylistTracks.Move(oldIndex, Math.Clamp(newIndex, 0, PlaylistTracks.Count - 1));
+
+            await _playlistService.MoveTrackAsync(SelectedPlaylist.Id, movedTrack.Id, newIndex);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error moving track: {ex.Message}";
+            int fallbackIndex = PlaylistTracks.IndexOf(movedTrack);
+            if (fallbackIndex >= 0 && oldIndex != fallbackIndex)
+                PlaylistTracks.Move(fallbackIndex, oldIndex);
+        }
     }
 
     private async void OnPlaylistsChanged(object? sender, EventArgs e) => await LoadPlaylistsAsync();

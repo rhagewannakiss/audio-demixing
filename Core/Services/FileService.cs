@@ -50,7 +50,7 @@ public class FileService : IFileService
         return file?.TryGetLocalPath();
     }
 
-    public async Task<IReadOnlyList<string>> GetAudioFilesFromItemsAsync(IReadOnlyList<IStorageItem> items)
+    public Task<IReadOnlyList<string>> GetAudioFilesFromItemsAsync(IReadOnlyList<IStorageItem> items)
     {
         var paths = new List<string>();
         foreach (var item in items)
@@ -74,12 +74,12 @@ public class FileService : IFileService
                 }
             }
         }
-        return paths;
+        return Task.FromResult<IReadOnlyList<string>>(paths);
     }
 
     private static Window? GetMainWindow()
     {
-        if (App.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             return desktop.MainWindow;
         return null;
     }

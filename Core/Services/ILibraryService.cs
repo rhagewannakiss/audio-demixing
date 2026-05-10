@@ -16,4 +16,5 @@ public interface ILibraryService
     Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TrackInfo>> GetTracksByPathsAsync(IReadOnlyList<string> filePaths);
     event EventHandler? LibraryChanged;
+    Task ResetAsync();
 }

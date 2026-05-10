@@ -16,18 +16,16 @@ public partial class LibraryView : UserControl
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
-    private async void OnDragOver(object? sender, DragEventArgs e)
+    private static void OnDragOver(object? sender, DragEventArgs e)
     {
         e.DragEffects = DragDropEffects.Copy;
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        var files = e.Data.GetFiles();
+        var files = e.DataTransfer.TryGetFiles();
         if (files == null || !files.Any()) return;
         if (DataContext is LibraryViewModel vm)
-        {
             await vm.LoadFromDrop(files.ToList());
-        }
     }
 }

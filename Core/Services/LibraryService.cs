@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,24 +11,24 @@ using Microsoft.Data.Sqlite;
 
 namespace AudioStemPlayer.Core.Services;
 
-public class JsonLibraryService : ILibraryService
+public class SqLiteLibraryService : ILibraryService
 {
     private readonly SqliteConnectionFactory _connectionFactory;
     private readonly DatabaseInitializer _databaseInitializer;
     
     public event EventHandler? LibraryChanged;
     
-    public JsonLibraryService()
+    public SqLiteLibraryService()
         : this(new SqliteConnectionFactory())
     {
     }
 
-    public JsonLibraryService(SqliteConnectionFactory connectionFactory)
+    public SqLiteLibraryService(SqliteConnectionFactory connectionFactory)
         : this(connectionFactory, new DatabaseInitializer(connectionFactory))
     {
     }
 
-    public JsonLibraryService(SqliteConnectionFactory connectionFactory, DatabaseInitializer databaseInitializer)
+    public SqLiteLibraryService(SqliteConnectionFactory connectionFactory, DatabaseInitializer databaseInitializer)
     {
         _connectionFactory = connectionFactory;
         _databaseInitializer = databaseInitializer;
@@ -287,6 +288,17 @@ RETURNING Id;
 
         object? id = await command.ExecuteScalarAsync();
         return Convert.ToInt64(id, CultureInfo.InvariantCulture);
+    }
+    
+    public async Task ResetAsync()
+    {
+        string dbPath = _connectionFactory.DatabasePath;
+        if (File.Exists(dbPath))
+        {
+            await Task.Run(() => File.Delete(dbPath));
+        }
+        await _databaseInitializer.InitializeAsync();
+        LibraryChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private static bool HasSameStoredValues(TrackInfo existing, TrackInfo candidate)

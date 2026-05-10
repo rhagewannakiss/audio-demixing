@@ -30,7 +30,7 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
             services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
             services.AddSingleton<IMetadataReader, MetadataReader>();
-            services.AddSingleton<ILibraryService, JsonLibraryService>();
+            services.AddSingleton<ILibraryService, SqLiteLibraryService>();
             services.AddSingleton<IDemixingService, DemixingService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IProcessingHistoryService, ProcessingHistoryService>();
@@ -40,7 +40,8 @@ public partial class App : Application
             services.AddSingleton<LibraryViewModel>();
             services.AddSingleton<DemixingViewModel>();
             services.AddSingleton<HistoryViewModel>();
-            services.AddSingleton<PlaylistsViewModel>();   
+            services.AddSingleton<PlaylistsViewModel>();
+            services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<ConfirmationDialogViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 

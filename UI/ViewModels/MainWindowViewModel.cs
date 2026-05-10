@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioStemPlayer.UI.ViewModels;
@@ -13,6 +14,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private DemixingViewModel? _cachedDemixingVm;
     private HistoryViewModel? _cachedHistoryVm;
     private PlaylistsViewModel? _cachedPlaylistsVm;
+    private SettingsViewModel? _cachedSettingsVm;
 
     [ObservableProperty]
     private PageType _selectedPage;
@@ -30,6 +32,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         _serviceProvider = serviceProvider;
         _playerPanelViewModel = playerPanelViewModel;
 
+        _playerPanelViewModel.TrackChanged += OnPlayerTrackChanged;
+
         SelectedPage = PageType.Library;
         UpdateCurrentPage();
     }
@@ -43,7 +47,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (_cachedLibraryVm == null)
             {
                 _cachedLibraryVm = _serviceProvider.GetRequiredService<LibraryViewModel>();
-                _cachedLibraryVm.TrackSelected += path => _playerPanelViewModel.LoadTrack(path);
+                _cachedLibraryVm.TrackSelected += OnLibraryTrackSelected;
                 _cachedLibraryVm.TrackRemoved += OnTrackRemoved;
             }
             CurrentPageViewModel = _cachedLibraryVm;
@@ -72,9 +76,15 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             if (_cachedPlaylistsVm == null)
             {
                 _cachedPlaylistsVm = _serviceProvider.GetRequiredService<PlaylistsViewModel>();
-                _cachedPlaylistsVm.TrackPlayRequested += OnPlaylistsPlayRequested;
+                _cachedPlaylistsVm.TrackPlayRequested += OnPlaylistsTrackSelected;
             }
             CurrentPageViewModel = _cachedPlaylistsVm;
+        }
+        else if (SelectedPage == PageType.Settings)
+        {
+            if (_cachedSettingsVm == null)
+                _cachedSettingsVm = _serviceProvider.GetRequiredService<SettingsViewModel>();
+            CurrentPageViewModel = _cachedSettingsVm;
         }
         else
         {
@@ -82,30 +92,67 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void OnTrackRemoved(string removedPath)
+    private void OnLibraryTrackSelected(string filePath)
     {
-        if (_playerPanelViewModel.CurrentFilePath == removedPath)
-            _playerPanelViewModel.Unload();
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+        if (_cachedLibraryVm != null)
+        {
+            var allTracks = _cachedLibraryVm.AllTracksSorted;
+            var selected = allTracks.FirstOrDefault(t => t.FilePath == filePath);
+            if (selected != null)
+            {
+                int index = allTracks.IndexOf(selected);
+                _playerPanelViewModel.SetQueue(allTracks.Select(t => t.FilePath), index);
+                return;
+            }
+        }
+        _playerPanelViewModel.LoadTrack(filePath);
+    }
+
+    private void OnPlaylistsTrackSelected(string filePath)
+    {
+        if (_cachedPlaylistsVm != null)
+        {
+            var tracks = _cachedPlaylistsVm.PlaylistTracks;
+            var selected = tracks.FirstOrDefault(t => t.FilePath == filePath);
+            if (selected != null)
+            {
+                int index = tracks.IndexOf(selected);
+                if (index >= 0)
+                {
+                    _playerPanelViewModel.SetQueue(tracks.Select(t => t.FilePath), index);
+                    return;
+                }
+            }
+        }
+        _playerPanelViewModel.LoadTrack(filePath);
     }
 
     private void OnHistoryPlayRequested(string filePath)
     {
         _playerPanelViewModel.LoadTrack(filePath);
         if (_cachedLibraryVm != null)
-            _cachedLibraryVm.SelectedTrack = null;
+            _cachedLibraryVm.SetSelectedTrackSilently(filePath);
     }
 
-    private void OnPlaylistsPlayRequested(string filePath)
+    private void OnTrackRemoved(string removedPath)
     {
-        _playerPanelViewModel.LoadTrack(filePath);
-        if (_cachedLibraryVm != null)
-            _cachedLibraryVm.SelectedTrack = null;
+        if (_playerPanelViewModel.CurrentFilePath == removedPath)
+        {
+            _playerPanelViewModel.Unload();
+        }
+    }
+
+    private void OnPlayerTrackChanged(string filePath)
+    {
+        if (_cachedLibraryVm != null) _cachedLibraryVm.SetSelectedTrackSilently(filePath);
     }
 
     public void Dispose()
     {
         if (_cachedLibraryVm != null) _cachedLibraryVm.TrackRemoved -= OnTrackRemoved;
         if (_cachedHistoryVm != null) _cachedHistoryVm.TrackPlayRequested -= OnHistoryPlayRequested;
-        if (_cachedPlaylistsVm != null) _cachedPlaylistsVm.TrackPlayRequested -= OnPlaylistsPlayRequested;
+        if (_cachedPlaylistsVm != null) _cachedPlaylistsVm.TrackPlayRequested -= OnPlaylistsTrackSelected;
+        _playerPanelViewModel.TrackChanged -= OnPlayerTrackChanged;
     }
 }

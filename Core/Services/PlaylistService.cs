@@ -138,7 +138,7 @@ ORDER BY pt.Position, t.Title COLLATE NOCASE;
         var tracks = new List<TrackInfo>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
-            tracks.Add(JsonLibraryService.ReadTrack(reader));
+            tracks.Add(SqLiteLibraryService.ReadTrack(reader));
 
         return tracks;
     }
