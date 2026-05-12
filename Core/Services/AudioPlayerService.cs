@@ -22,7 +22,7 @@ public class AudioPlayerService : IAudioPlayerService
 
     public AudioPlayerService()
     {
-        _positionTimer = new Timer(100);
+        _positionTimer = new Timer(10);
         _positionTimer.Elapsed += OnPositionTimerElapsed;
     }
 
