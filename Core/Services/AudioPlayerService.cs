@@ -25,6 +25,9 @@ public class AudioPlayerService : IAudioPlayerService
         _positionTimer = new Timer(10);
         _positionTimer.Elapsed += OnPositionTimerElapsed;
     }
+    
+    public int Stream => _stream;
+    public event EventHandler<int>? StreamCreated; 
 
     public event EventHandler<double>? PositionChanged;
     public event EventHandler? PlaybackEnded;
@@ -97,6 +100,10 @@ public class AudioPlayerService : IAudioPlayerService
             var error = Bass.LastError;
             throw new InvalidOperationException($"Failed to create audio stream. BASS error: {error}");
         }
+        
+        if (_stream != 0)
+            StreamCreated?.Invoke(this, _stream);
+    
 
         Bass.ChannelSetAttribute(_stream, ChannelAttribute.Volume, _volume / 100.0);
 

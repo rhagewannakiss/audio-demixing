@@ -39,4 +39,6 @@ public interface IAudioPlayerService : IDisposable
 
 
     event EventHandler PlaybackEnded;
+    
+    int Stream { get; }
 }
