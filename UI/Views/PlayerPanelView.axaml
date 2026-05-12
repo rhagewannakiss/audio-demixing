@@ -172,7 +172,7 @@
                         <Panel>
                             <Path Data="M 3,4 L 7,8 L 3,12 M 8,4 L 12,8 L 8,12"
                                   Width="16" Height="16"
-                                  Stroke="{DynamicResource AccentForegroundBrush}"
+                                  Stroke="{DynamicResource TextBrush}"
                                   StrokeThickness="2"
                                   StrokeLineCap="Round"
                                   StrokeJoin="Round"
@@ -184,8 +184,8 @@
                                     M 6,12 L 4,14 L 6,16
                                     M 7,7 L 8,6 L 8,10"
                                   Width="16" Height="16"
-                                  Stroke="{DynamicResource AccentForegroundBrush}"
-                                  StrokeThickness="1.5"
+                                  Stroke="{DynamicResource TextBrush}"
+                                  StrokeThickness="2"
                                   StrokeLineCap="Round"
                                   StrokeJoin="Round"
                                   IsVisible="{Binding IsRepeatOne}"/>
@@ -202,7 +202,7 @@
                     M 5,5.5 L 9,5.5 L 9,4 L 11,6.5 L 9,9 L 9,7.5 L 5,7.5 Z
                     M 11,10.5 L 7,10.5 L 7,12 L 5,9.5 L 7,7 L 7,8.5 L 11,8.5 Z"
                                   Width="16" Height="16"
-                                  Foreground="{DynamicResource AccentForegroundBrush}"/>
+                                  Foreground="{DynamicResource AccentTextBrush}"/>
                     </Button>
                     
                     <Button Command="{Binding OpenEqualizerCommand}" 
@@ -212,7 +212,7 @@
                 M 6,5 L 10,5 L 10,15 L 6,15 Z
                 M 11,8 L 15,8 L 15,15 L 11,15 Z"
                                   Width="16" Height="16"
-                                  Foreground="{DynamicResource AccentForegroundBrush}"/>
+                                  Foreground="{DynamicResource AccentTextBrush}"/>
                     </Button>
                 </StackPanel>
             </Grid>
