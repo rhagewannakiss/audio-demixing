@@ -10,6 +10,11 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
 namespace AudioStemPlayer.UI.ViewModels;
+public enum PlaybackMode
+{
+    Sequential,
+    RepeatOne
+}
 
 public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 {
@@ -54,6 +59,18 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _hasNoCover = true;
 
+    [ObservableProperty]
+    private PlaybackMode _currentPlaybackMode = PlaybackMode.Sequential;
+
+    [ObservableProperty]
+    private double _loopStart = 0;
+
+    [ObservableProperty]
+    private double _loopEnd = 1.0;
+
+    [ObservableProperty]
+    private bool _isLoopEnabled;
+
     public string? CurrentFilePath { get; private set; }
 
     private List<string> _queue = new();
@@ -80,15 +97,61 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         {
             _isUpdatingFromPlayer = true;
             Position = position;
+            
+            if (IsLoopEnabled && Position >= LoopEnd)
+            {
+                _audioPlayer.Position = LoopStart;
+                Position = LoopStart;
+            }
+
             if (_audioPlayer.Duration > 0)
-                CurrentTime = TimeSpan.FromSeconds(position * _audioPlayer.Duration).ToString(@"m\:ss");
+            {
+                var current = TimeSpan.FromSeconds(Position * _audioPlayer.Duration);
+                CurrentTime = current.ToString(@"m\:ss");
+            }
             _isUpdatingFromPlayer = false;
         });
     }
 
+    [RelayCommand]
+    private void ToggleLoop()
+    {
+        IsLoopEnabled = !IsLoopEnabled;
+        if (IsLoopEnabled)
+        {
+            LoopStart = 0.01;
+            LoopEnd = 0.99;
+
+            if (_audioPlayer.IsLoaded && (Position < LoopStart || Position > LoopEnd))
+            {
+                _audioPlayer.Position = LoopStart;
+                Position = LoopStart;
+            }
+        }
+    }
+    
+    public bool IsRepeatOne => CurrentPlaybackMode == PlaybackMode.RepeatOne;
+    public bool IsNotRepeatOne => !IsRepeatOne;
+
+    partial void OnCurrentPlaybackModeChanged(PlaybackMode value)
+    {
+        OnPropertyChanged(nameof(IsRepeatOne));
+        OnPropertyChanged(nameof(IsNotRepeatOne));
+    }
+
     private void OnPlaybackEnded(object? sender, EventArgs e)
     {
-        Dispatcher.UIThread.Post(() => PlayNext());
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (CurrentPlaybackMode == PlaybackMode.RepeatOne && _currentIndex >= 0 && _currentIndex < _queue.Count)
+            {
+                _ = LoadAndPlaySingle(_queue[_currentIndex]);
+            }
+            else
+            {
+                PlayNext();
+            }
+        });
     }
 
     private void PlayNext()
@@ -176,11 +239,22 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         _ = LoadAndPlaySingle(_queue[_currentIndex]);
     }
 
+    [RelayCommand]
+    private void TogglePlaybackMode()
+    {
+        CurrentPlaybackMode = CurrentPlaybackMode == PlaybackMode.Sequential
+            ? PlaybackMode.RepeatOne
+            : PlaybackMode.Sequential;
+    }
+
+    
+
     public async void LoadTrack(string path)
     {
         _queue.Clear();
         _currentIndex = -1;
         NotifyNavigationStateChanged();
+        ResetLoop();
         await LoadAndPlaySingle(path);
     }
 
@@ -190,6 +264,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         if (_queue.Count == 0) return;
         _currentIndex = Math.Clamp(startIndex, 0, _queue.Count - 1);
         NotifyNavigationStateChanged();
+        ResetLoop();
         _ = LoadAndPlaySingle(_queue[_currentIndex]);
     }
 
@@ -274,6 +349,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         CoverBitmap = null;
         _queue.Clear();
         _currentIndex = -1;
+        ResetLoop();
         NotifyNavigationStateChanged();
     }
 
@@ -281,6 +357,13 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     {
         _audioPlayer.PositionChanged -= OnPositionChanged;
         _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
+    }
+
+    private void ResetLoop()
+    {
+        LoopStart = 0;
+        LoopEnd = 1.0;
+        IsLoopEnabled = false;
     }
 
     private void NotifyNavigationStateChanged()
