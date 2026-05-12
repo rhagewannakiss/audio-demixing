@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,24 +11,24 @@ using Microsoft.Data.Sqlite;
 
 namespace AudioStemPlayer.Core.Services;
 
-public class JsonLibraryService : ILibraryService
+public class SqLiteLibraryService : ILibraryService
 {
     private readonly SqliteConnectionFactory _connectionFactory;
     private readonly DatabaseInitializer _databaseInitializer;
     
     public event EventHandler? LibraryChanged;
     
-    public JsonLibraryService()
+    public SqLiteLibraryService()
         : this(new SqliteConnectionFactory())
     {
     }
 
-    public JsonLibraryService(SqliteConnectionFactory connectionFactory)
+    public SqLiteLibraryService(SqliteConnectionFactory connectionFactory)
         : this(connectionFactory, new DatabaseInitializer(connectionFactory))
     {
     }
 
-    public JsonLibraryService(SqliteConnectionFactory connectionFactory, DatabaseInitializer databaseInitializer)
+    public SqLiteLibraryService(SqliteConnectionFactory connectionFactory, DatabaseInitializer databaseInitializer)
     {
         _connectionFactory = connectionFactory;
         _databaseInitializer = databaseInitializer;
@@ -166,6 +167,59 @@ WHERE FilePath = $filePath;
         return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
     }
 
+    public async Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        await _databaseInitializer.InitializeAsync(cancellationToken);
+        await using var connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
+FROM Tracks
+WHERE Id = $id;
+""";
+        command.Parameters.AddWithValue("$id", id);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
+    }
+
+    public async Task<IReadOnlyList<TrackInfo>> GetTracksByPathsAsync(IReadOnlyList<string> filePaths)
+    {
+        if (filePaths == null || filePaths.Count == 0)
+            return Array.Empty<TrackInfo>();
+
+        await _databaseInitializer.InitializeAsync();
+
+        var parameters = new List<SqliteParameter>();
+        var paramNames = new List<string>();
+        for (int i = 0; i < filePaths.Count; i++)
+        {
+            string pName = $"$p{i}";
+            paramNames.Add(pName);
+            parameters.Add(new SqliteParameter(pName, filePaths[i]));
+        }
+
+        string inClause = string.Join(", ", paramNames);
+        string sql = $"""
+SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
+FROM Tracks
+WHERE FilePath IN ({inClause})
+ORDER BY DateAdded DESC, Id DESC;
+""";
+
+        await using var connection = await _connectionFactory.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        foreach (var p in parameters)
+            command.Parameters.Add(p);
+
+        var tracks = new List<TrackInfo>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            tracks.Add(ReadTrack(reader));
+        return tracks;
+    }
+
     private static async Task<TrackInfo?> ReadTrackByPathAsync(
         SqliteConnection connection,
         string filePath,
@@ -180,22 +234,6 @@ FROM Tracks
 WHERE FilePath = $filePath;
 """;
         command.Parameters.AddWithValue("$filePath", filePath);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
-    }
-
-    public async Task<TrackInfo?> GetTrackByIdAsync(long id, CancellationToken cancellationToken = default)
-    {
-        await _databaseInitializer.InitializeAsync(cancellationToken);
-        await using var connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText = """
-SELECT Id, FilePath, Artist, Title, Album, Genre, Year, DurationSeconds, FileSizeBytes, DateAdded
-FROM Tracks
-WHERE Id = $id;
-""";
-        command.Parameters.AddWithValue("$id", id);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? ReadTrack(reader) : null;
@@ -250,6 +288,17 @@ RETURNING Id;
 
         object? id = await command.ExecuteScalarAsync();
         return Convert.ToInt64(id, CultureInfo.InvariantCulture);
+    }
+    
+    public async Task ResetAsync()
+    {
+        string dbPath = _connectionFactory.DatabasePath;
+        if (File.Exists(dbPath))
+        {
+            await Task.Run(() => File.Delete(dbPath));
+        }
+        await _databaseInitializer.InitializeAsync();
+        LibraryChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private static bool HasSameStoredValues(TrackInfo existing, TrackInfo candidate)
