@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AudioStemPlayer.UI.Views;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 
@@ -21,6 +23,7 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
     private readonly IAudioPlayerService _audioPlayer;
     private readonly IMetadataReader _metadataReader;
     private readonly IDialogService _dialogService;
+    private readonly IEqService _eqService;
     private bool _isUpdatingFromPlayer;
 
     [ObservableProperty]
@@ -82,11 +85,13 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
 
     public event Action<string>? TrackChanged;
 
-    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader, IDialogService dialogService)
+    public PlayerPanelViewModel(IAudioPlayerService audioPlayer, IMetadataReader metadataReader, IDialogService dialogService, IEqService eqService)
     {
         _audioPlayer = audioPlayer;
         _metadataReader = metadataReader;
         _dialogService = dialogService;
+        _eqService = eqService;
+        _eqService.Connect(_audioPlayer);
         _audioPlayer.PositionChanged += OnPositionChanged;
         _audioPlayer.PlaybackEnded += OnPlaybackEnded;
     }
@@ -353,11 +358,6 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         NotifyNavigationStateChanged();
     }
 
-    public void Dispose()
-    {
-        _audioPlayer.PositionChanged -= OnPositionChanged;
-        _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
-    }
 
     private void ResetLoop()
     {
@@ -365,10 +365,34 @@ public partial class PlayerPanelViewModel : ViewModelBase, IDisposable
         LoopEnd = 1.0;
         IsLoopEnabled = false;
     }
+    
+    private EqualizerWindow? _equalizerWindow;
+
+    [RelayCommand]
+    private void OpenEqualizer()
+    {
+        if (_equalizerWindow != null && _equalizerWindow.IsVisible)
+        {
+            _equalizerWindow.Close();
+            _equalizerWindow = null;
+            return;
+        }
+
+        _equalizerWindow = EqualizerWindow.Create(_eqService);
+        _equalizerWindow.Closed += (s, e) => _equalizerWindow = null;
+        _equalizerWindow.Show();
+    }
 
     private void NotifyNavigationStateChanged()
     {
         OnPropertyChanged(nameof(HasPreviousTrack));
         OnPropertyChanged(nameof(HasNextTrack));
+    }
+    
+    public void Dispose()
+    {
+        _eqService.Disconnect();
+        _audioPlayer.PositionChanged -= OnPositionChanged;
+        _audioPlayer.PlaybackEnded -= OnPlaybackEnded;
     }
 }

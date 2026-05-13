@@ -46,17 +46,42 @@
 
 
   <ItemGroup>
+    
     <None Update="runtimes\osx\native\libbass.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="runtimes\osx\native\libbass_fx.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
 
+    
+    
+    
+    
+    
     <None Update="runtimes\linux-x86\native\libbass.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="runtimes\linux-x86\native\libbass_fx.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    
+    
+    
+    
 
     <Content Include="runtimes\linux-x86\native\libbass.so" Link="runtimes\linux-x64\native\libbass.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>runtimes\linux-x64\native\libbass.so</TargetPath>
     </Content>
+    <Content Include="runtimes\linux-x86\native\libbass_fx.so" Link="runtimes\linux-x64\native\libbass_fx.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>runtimes\linux-x64\native\libbass_fx.so</TargetPath>
+    </Content>
+    
+    
+    
+    
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioStemPlayer.UI.ViewModels;
@@ -29,6 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
     public MainWindowViewModel(IServiceProvider serviceProvider, PlayerPanelViewModel playerPanelViewModel)
     {
+
         _serviceProvider = serviceProvider;
         _playerPanelViewModel = playerPanelViewModel;
 

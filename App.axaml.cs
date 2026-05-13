@@ -35,6 +35,7 @@ public partial class App : Application
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IProcessingHistoryService, ProcessingHistoryService>();
             services.AddSingleton<IPlaylistService, PlaylistService>();  
+            services.AddSingleton<IEqService, EqService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
@@ -43,6 +44,7 @@ public partial class App : Application
             services.AddSingleton<PlaylistsViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<ConfirmationDialogViewModel>();
+            services.AddSingleton<EqualizerViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 
             _services = services.BuildServiceProvider();
