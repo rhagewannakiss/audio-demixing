@@ -87,6 +87,7 @@ Main tables:
 - Torch/TorchCodec dependencies required by Demucs
 - FFmpeg available in `PATH`
 - Native BASS library for the target OS
+- Native BASS_FX library for the equalizer (`libbass_fx.so` on Linux, `libbass_fx.dylib` on macOS, `bass_fx.dll` on Windows)
 
 ### Installation
 ```sh
@@ -127,6 +128,26 @@ python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 .venv\Scripts\python -m pip install demucs torchcodec
 .venv\Scripts\python -m demucs --help
+```
+
+### BASS_FX setup
+The equalizer uses the native BASS_FX add-on. On Linux, `libbass_fx.so` should be placed next to the other native BASS libraries in `runtimes/linux-x86/native/`.
+
+Install the x86-64 Linux library:
+
+```sh
+mkdir -p /tmp/audio-stem-bassfx
+curl -L https://www.jobnik.net/BASS_FX/bass_fx24-linux.zip \
+  -o /tmp/audio-stem-bassfx/bass_fx24-linux.zip
+unzip -j -o /tmp/audio-stem-bassfx/bass_fx24-linux.zip \
+  x64/libbass_fx.so \
+  -d runtimes/linux-x86/native
+```
+
+Check the installed library:
+
+```sh
+file runtimes/linux-x86/native/libbass_fx.so
 ```
 
 ### Usage
