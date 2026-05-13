@@ -22,39 +22,52 @@
                        FontFamily="Helvetica Bold"
                        FontSize="22"/>
 
-            <StackPanel Grid.Column="1"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Spacing="10"
-                        Margin="0,5,10,5">
-                
-                <TextBlock Text="Search:"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextBrush}"/>
-                
-                <TextBox Text="{Binding SearchText}"
-                         Watermark="Start typing"
-                         MinWidth="200"
-                         VerticalAlignment="Center"/>
+            <WrapPanel Grid.Column="1"
+                       Orientation="Horizontal"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Margin="0,8,10,8">
+
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="0,0,10,6">
+                    <TextBlock Text="Search:"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextBrush}"
+                               Margin="0,0,8,0"/>
+
+                    <TextBox Text="{Binding SearchText}"
+                             Watermark="Start typing"
+                             MinWidth="200"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
                 
                 <Button Content="Load Track"
                         Classes="primary"
                         Command="{Binding LoadTrackCommand}"
-                        Padding="15,5"/>
+                        Padding="15,5"
+                        Margin="0,0,10,6"/>
+
+                <Button Content="Load Folder"
+                        Classes="primary"
+                        Command="{Binding LoadFolderCommand}"
+                        Padding="15,5"
+                        Margin="0,0,10,6"/>
 
                 <Button Content="Delete Track"
                         Classes="danger"
                         Command="{Binding DeleteTrackCommand}"
                         IsEnabled="{Binding HasSelectedTrack}"
-                        Padding="15,5"/>
+                        Padding="15,5"
+                        Margin="0,0,10,6"/>
 
                 <Button Content="Add to Playlist"
                         Classes="primary"
                         Command="{Binding AddToPlaylistCommand}"
                         IsEnabled="{Binding HasSelectedTrack}"
-                        Padding="15,5"/>
-            </StackPanel>
+                        Padding="15,5"
+                        Margin="0,0,0,6"/>
+            </WrapPanel>
         </Grid>
         
         <Rectangle Grid.Row="1"

@@ -74,6 +74,13 @@ public partial class LibraryViewModel : LibraryViewModelBase
         StatusMessage = $"Added: {track.DisplayName}";
     }
 
+    [RelayCommand]
+    private async Task LoadFolderAsync()
+    {
+        var paths = await _fileService.OpenFolderAsync();
+        await ImportAudioFilesAsync(paths);
+    }
+
     [RelayCommand(CanExecute = nameof(HasSelectedTrack))]
     private async Task DeleteTrackAsync()
     {
@@ -134,7 +141,16 @@ public partial class LibraryViewModel : LibraryViewModelBase
     public async Task LoadFromDrop(IReadOnlyList<IStorageItem> items)
     {
         var paths = await _fileService.GetAudioFilesFromItemsAsync(items);
-        if (paths.Count == 0) return;
+        await ImportAudioFilesAsync(paths);
+    }
+
+    private async Task ImportAudioFilesAsync(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 0)
+        {
+            StatusMessage = "No supported audio files found.";
+            return;
+        }
 
         StatusMessage = $"Adding {paths.Count} files...";
 

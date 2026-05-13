@@ -33,6 +33,24 @@ public class FileService : IFileService
         return files.FirstOrDefault()?.TryGetLocalPath();
     }
 
+    public async Task<IReadOnlyList<string>> OpenFolderAsync()
+    {
+        var mainWindow = GetMainWindow();
+        if (mainWindow == null) return Array.Empty<string>();
+
+        var folders = await mainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select Audio Folder",
+            AllowMultiple = false
+        });
+
+        var folder = folders.FirstOrDefault();
+        if (folder == null)
+            return Array.Empty<string>();
+
+        return await GetAudioFilesFromItemsAsync([folder]);
+    }
+
     public async Task<string?> SaveFileAsync(string suggestedFileName, string? initialDirectory = null)
     {
         var mainWindow = GetMainWindow();
