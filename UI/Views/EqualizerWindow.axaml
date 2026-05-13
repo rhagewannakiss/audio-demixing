@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AudioStemPlayer.UI.Views.EqualizerWindow"
+        x:CompileBindings="False"
+        Title="Equalizer"
+        Width="520" Height="420"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto, *" Margin="12,8">
+        <Grid Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ToggleSwitch Grid.Column="0"
+                          IsChecked="{Binding IsEnabled}"
+                          OnContent="ON" OffContent="OFF"
+                          Foreground="{DynamicResource TextBrush}"
+                          Margin="4,0,12,0"/>
+
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding Presets}"
+                      SelectedItem="{Binding SelectedPreset}"
+                      HorizontalAlignment="Left"
+                      MinWidth="150"
+                      Background="{DynamicResource TabsBackgroundBrush}"
+                      Foreground="{DynamicResource TextBrush}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" Foreground="{DynamicResource TextBrush}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+        </Grid>
+
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Bands}" Margin="6,30, 0,0" Name="EqualizerBands">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel HorizontalAlignment="Center" Spacing="4" Width="36">
+                        <TextBlock Text="{Binding Gain}"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="11"
+                                   TextAlignment="Center"
+                                   Margin="0,0,0,2"/>
+
+                        <Canvas Height="200" Width="26" Background="Transparent"
+                                Tag="{Binding}"
+                                Loaded="OnSliderLoaded"
+                                PointerPressed="OnSliderPointerPressed"
+                                PointerMoved="OnSliderPointerMoved"
+                                PointerReleased="OnSliderPointerReleased">
+                            <Rectangle Name="TrackBg"
+                                       Fill="{DynamicResource SeparatorBrush}"
+                                       Width="4" RadiusX="2" RadiusY="2"
+                                       Canvas.Left="11" Canvas.Top="0"
+                                       Height="200"/>
+                            <Rectangle Name="FillRect"
+                                       Fill="{DynamicResource AccentBrush}"
+                                       Width="4" RadiusX="2" RadiusY="2"
+                                       Canvas.Left="11"
+                                       Height="0"/>
+                            <Ellipse Name="Thumb"
+                                     Width="14" Height="14"
+                                     Fill="{DynamicResource AccentBrush}"
+                                     Stroke="White" StrokeThickness="1.5"
+                                     Canvas.Left="6"/>
+                        </Canvas>
+
+                        <TextBlock Text="{Binding Frequency}"
+                                   Foreground="{DynamicResource TextBrush}"
+                                   FontSize="12"
+                                   TextAlignment="Center"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</Window>

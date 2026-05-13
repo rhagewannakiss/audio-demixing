@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AudioStemPlayer.Core.Services;
 using AudioStemPlayer.Core.Models;
+using Avalonia.Platform.Storage;
 
 namespace AudioStemPlayer.UI.ViewModels;
 
@@ -24,9 +26,12 @@ public partial class LibraryViewModel : LibraryViewModelBase
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
+    
+    public List<TrackInfo> AllTracksSorted => _allTracks.Values
+        .OrderByDescending(t => t.DateAdded)
+        .ToList();
 
     public event Action<string>? TrackSelected;
-    
     public event Action<string>? TrackRemoved;
 
     public LibraryViewModel(
@@ -66,7 +71,6 @@ public partial class LibraryViewModel : LibraryViewModelBase
             return;
 
         await _libraryService.AddTrackAsync(track);
-
         StatusMessage = $"Added: {track.DisplayName}";
     }
 
@@ -77,24 +81,74 @@ public partial class LibraryViewModel : LibraryViewModelBase
 
         bool confirm = await _dialogService.ShowConfirmationAsync(
             "Delete Track",
-            $"Are you sure you want to delete \"{SelectedTrack.DisplayName}\"?");
-
+            $"Are you sure you want to delete \"{SelectedTrack.DisplayName}\"?", true);
         if (!confirm)
         {
             StatusMessage = "Deletion cancelled";
             return;
         }
-        
+
         string removedPath = SelectedTrack.FilePath;
         string displayName = SelectedTrack.DisplayName;
         await _libraryService.RemoveTrackAsync(removedPath);
         StatusMessage = $"Deleted: {displayName}";
         TrackRemoved?.Invoke(removedPath);
+    }
 
-        StatusMessage = $"Deleted: {displayName}";
+    [RelayCommand(CanExecute = nameof(HasSelectedTrack))]
+    private async Task AddToPlaylistAsync()
+    {
+        if (SelectedTrack == null) return;
+        var playlists = await _playlistService.GetPlaylistsAsync();
+        if (playlists.Count == 0)
+        {
+            StatusMessage = "No playlists available. Create one first.";
+            return;
+        }
+        var selectedPlaylist = await _dialogService.ShowPlaylistPickerAsync(playlists);
+        if (selectedPlaylist == null) return;
+
+        try
+        {
+            await _playlistService.AddTrackToPlaylistAsync(selectedPlaylist.Id, SelectedTrack.Id);
+            StatusMessage = $"Added '{SelectedTrack.DisplayName}' to '{selectedPlaylist.Name}'";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error adding to playlist: {ex.Message}";
+        }
     }
 
     private bool HasSelectedTrack => SelectedTrack != null;
+
+    public void SetSelectedTrackSilently(string filePath)
+    {
+        if (_allTracks.TryGetValue(filePath, out var track))
+        {
+            _isRestoringSelection = true;
+            SelectedTrack = track;
+            _isRestoringSelection = false;
+        }
+    }
+
+    public async Task LoadFromDrop(IReadOnlyList<IStorageItem> items)
+    {
+        var paths = await _fileService.GetAudioFilesFromItemsAsync(items);
+        if (paths.Count == 0) return;
+
+        StatusMessage = $"Adding {paths.Count} files...";
+
+        var tracks = new List<TrackInfo>();
+        foreach (var path in paths)
+        {
+            var track = await _metadataReader.ReadAsync(path);
+            track.DateAdded = DateTime.Now;
+            tracks.Add(track);
+        }
+
+        await _libraryService.SaveTracksAsync(tracks);
+        StatusMessage = $"Added {tracks.Count} file(s).";
+    }
 
     protected override void UpdateDisplayedTracks()
     {
@@ -113,10 +167,7 @@ public partial class LibraryViewModel : LibraryViewModelBase
         Tracks.Clear();
         foreach (var track in sorted)
             Tracks.Add(track);
-        
-        
-        
-        
+
         SelectedTrack = null;
 
         _isRestoringSelection = true;
@@ -128,33 +179,4 @@ public partial class LibraryViewModel : LibraryViewModelBase
     }
 
     partial void OnSearchTextChanged(string value) => UpdateDisplayedTracks();
-
-
-
-
-
-
-    [RelayCommand(CanExecute = nameof(HasSelectedTrack))]
-    private async Task AddToPlaylistAsync()
-    {
-        if (SelectedTrack == null) return;
-        var playlists = await _playlistService.GetPlaylistsAsync();
-        if (playlists.Count == 0)
-        {
-            StatusMessage = "No playlists available. Create one first.";
-        }
-
-        var selectedPlaylist = await _dialogService.ShowPlaylistPickerAsync(playlists);
-        if (selectedPlaylist == null) return;
-
-        try
-        {
-            await _playlistService.AddTrackToPlaylistAsync(selectedPlaylist.Id, SelectedTrack.Id);
-            StatusMessage = $"Added '{SelectedTrack.DisplayName}' to '{selectedPlaylist.Name}'";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Error adding to playlist: {ex.Message}";
-        }
-    }
 }

@@ -30,18 +30,21 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
             services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
             services.AddSingleton<IMetadataReader, MetadataReader>();
-            services.AddSingleton<ILibraryService, JsonLibraryService>();
+            services.AddSingleton<ILibraryService, SqLiteLibraryService>();
             services.AddSingleton<IDemixingService, DemixingService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IProcessingHistoryService, ProcessingHistoryService>();
             services.AddSingleton<IPlaylistService, PlaylistService>();  
+            services.AddSingleton<IEqService, EqService>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<PlayerPanelViewModel>();
             services.AddSingleton<LibraryViewModel>();
             services.AddSingleton<DemixingViewModel>();
             services.AddSingleton<HistoryViewModel>();
-            services.AddSingleton<PlaylistsViewModel>();   
+            services.AddSingleton<PlaylistsViewModel>();
+            services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<ConfirmationDialogViewModel>();
+            services.AddSingleton<EqualizerViewModel>();
             services.AddSingleton<IServiceProvider>(sp => sp);
 
             _services = services.BuildServiceProvider();

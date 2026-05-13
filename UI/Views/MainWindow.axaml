@@ -3,7 +3,7 @@
         xmlns:vm="clr-namespace:AudioStemPlayer.UI.ViewModels"
         x:Class="AudioStemPlayer.UI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="test"
+        Title="AudioStemPlayer"
         MinWidth="1200" MinHeight="400"
         WindowStartupLocation="CenterScreen">
 

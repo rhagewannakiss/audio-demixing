@@ -4,56 +4,44 @@
              x:Class="AudioStemPlayer.UI.Views.PlayerPanelView"
              x:DataType="vm:PlayerPanelViewModel">
     <UserControl.Styles>
-        <Style Selector="Slider.ModernSlider /template/ Thumb">
+        <Style Selector="Button.primary:disabled PathIcon">
+            <Setter Property="Foreground" Value="#888888"/>
+        </Style>
+        <Style Selector="Button.primary:disabled Path">
+            <Setter Property="Stroke" Value="#888888"/>
+        </Style>
+        <Style Selector="Button.LoopActive">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Width" Value="14"/>
-            <Setter Property="Height" Value="14"/>
-            <Setter Property="CornerRadius" Value="7"/>
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Ellipse Fill="{TemplateBinding Background}"
-                             Stroke="White"
-                             StrokeThickness="2"/>
-                </ControlTemplate>
-            </Setter>
-        </Style>
-
-        <Style Selector="Slider.ModernSlider /template/ Thumb:pointerover">
-            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
-        </Style>
-
-        <Style Selector="Slider.ModernSlider /template/ Thumb:pressed">
-            <Setter Property="Background" Value="{DynamicResource AccentPressedBrush}"/>
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="10" Margin="10">
+    <StackPanel Spacing="8" Margin="12">
+        
+        <Border Background="{DynamicResource SeparatorBrush}"
+                CornerRadius="8"
+                HorizontalAlignment="Center"
+                Width="300" Height="300"
+                Margin="0,0,0,8">
+            <Panel>
+                <Border CornerRadius="8" ClipToBounds="True"
+                        Width="300" Height="300"
+                        IsVisible="{Binding HasCover}">
+                    <Image Source="{Binding CoverBitmap}"
+                           Stretch="UniformToFill"
+                           Width="300" Height="300"/>
+                </Border>
+                <Viewbox Stretch="Uniform" MaxWidth="100" MaxHeight="100"
+                         IsVisible="{Binding HasNoCover}">
+                    <TextBlock Text="♫"
+                               FontSize="80"
+                               Foreground="{DynamicResource TextBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Viewbox>
+            </Panel>
+        </Border>
 
-    <Border Background="{DynamicResource SeparatorBrush}"
-            CornerRadius="8"
-            HorizontalAlignment="Center"
-            Width="300" Height="300"
-            Margin="0,0,0,5">
-        <Panel>
-            <Border CornerRadius="8" ClipToBounds="True"
-                    Width="300" Height="300"
-                    IsVisible="{Binding HasCover}">
-                <Image Source="{Binding CoverBitmap}"
-                       Stretch="UniformToFill"
-                       Width="300" Height="300"/>
-            </Border>
-            <Viewbox Stretch="Uniform" MaxWidth="100" MaxHeight="100"
-                     IsVisible="{Binding HasNoCover}">
-                <TextBlock Text="♫"
-                           FontSize="80"
-                           Foreground="{DynamicResource TextBrush}"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-            </Viewbox>
-        </Panel>
-    </Border>
-
-    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,5">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,4">
             <TextBlock Text="{Binding TrackTitle}"
                        FontSize="24"
                        Foreground="{DynamicResource TextBrush}"
@@ -65,38 +53,169 @@
                        Foreground="{DynamicResource TextBrush}"
                        TextWrapping="Wrap"
                        TextAlignment="Center"
-                       Margin="10,5,10,0"/>
+                       Margin="10,4,10,0"/>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" Margin="0,10">
-            <Button Content="Play" Command="{Binding PlayCommand}" 
-                    IsEnabled="{Binding IsLoaded}"/>
-            <Button Content="Pause" Command="{Binding PauseCommand}" 
-                    IsEnabled="{Binding IsPlaying}"/>
-            <Button Content="Stop" Command="{Binding StopCommand}" 
-                    IsEnabled="{Binding IsLoaded}"/>
-        </StackPanel>
-        
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5" Margin="0,5">
-            <TextBlock Text="{Binding CurrentTime}" Width="40" TextAlignment="Center"/>
-            <Slider Classes="ModernSlider"
-                    Minimum="0" Maximum="1" 
-                    Value="{Binding Position}" 
-                    Width="200"
-                    Background="{DynamicResource SeparatorBrush}"
-                    Foreground="{DynamicResource AccentBrush}"/>
-            <TextBlock Text="{Binding TotalTime}" Width="40" TextAlignment="Center"/>
-        </StackPanel>
-        
-        
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5" Margin="0,5">
-            <TextBlock Text="Volume:" VerticalAlignment="Center"/>
-            <Slider Classes="ModernSlider"
-                    Minimum="0" Maximum="100" 
-                    Value="{Binding Volume}" 
-                    Width="150"
-                    Background="{DynamicResource SeparatorBrush}"
-                    Foreground="{DynamicResource AccentBrush}"/>
+        <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                <Button Command="{Binding PreviousCommand}" 
+                        IsEnabled="{Binding HasPreviousTrack}"
+                        Width="42" Height="34" Padding="0"
+                        Classes="primary">
+                    <PathIcon Data="M 2 4 L 3 4 L 3 12 L 2 12 Z M 4 8 L 8 4 L 8 12 Z M 9 8 L 13 4 L 13 12 Z"
+                              Width="16" Height="16"/>
+                </Button>
+
+                <Button Command="{Binding PlayPauseCommand}" 
+                        IsEnabled="{Binding IsLoaded}"
+                        Width="52" Height="44" Padding="0"
+                        Classes="primary">
+                    <Panel>
+                        <PathIcon Data="M 8 6 L 20 12 L 8 18 Z"
+                                  Width="20" Height="20"
+                                  IsVisible="{Binding IsNotPlaying}"/>
+                        <PathIcon Data="M 8 6 L 13 6 L 13 18 L 8 18 Z M 15 6 L 20 6 L 20 18 L 15 18 Z"
+                                  Width="20" Height="20"
+                                  IsVisible="{Binding IsPlaying}"/>
+                    </Panel>
+                </Button>
+
+                <Button Command="{Binding NextCommand}" 
+                        IsEnabled="{Binding HasNextTrack}"
+                        Width="42" Height="34" Padding="0"
+                        Classes="primary">
+                    <PathIcon Data="M 13 4 L 14 4 L 14 12 L 13 12 Z M 12 8 L 8 4 L 8 12 Z M 7 8 L 3 4 L 3 12 Z"
+                              Width="16" Height="16"/>
+                </Button>
+            </StackPanel>
+
+            <Grid Width="280" HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding CurrentTime}" Width="40" TextAlignment="Center"
+                           VerticalAlignment="Center"/>
+                <Canvas Grid.Column="1" Height="20" Name="ProgressCanvas" Background="Transparent">
+                    <Rectangle Fill="{DynamicResource SeparatorBrush}" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="TrackBackground"/>
+                    <Rectangle Fill="{DynamicResource AccentBrush}" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="ProgressFill"/>
+                    <Rectangle Fill="#80000000" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="InactiveLeft" IsVisible="{Binding IsLoopEnabled}"/>
+                    <Rectangle Fill="#80000000" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="InactiveRight" IsVisible="{Binding IsLoopEnabled}"/>
+                    <Border Name="LoopStartMarker"
+                            Width="6" Height="20"
+                            Background="#FF3CB371"
+                            CornerRadius="2"
+                            Cursor="SizeWestEast"
+                            IsVisible="{Binding IsLoopEnabled}"
+                            Canvas.Top="0"/>
+                    <Border Name="LoopEndMarker"
+                            Width="6" Height="20"
+                            Background="#FFCD5C5C"
+                            CornerRadius="2"
+                            Cursor="SizeWestEast"
+                            IsVisible="{Binding IsLoopEnabled}"
+                            Canvas.Top="0"/>
+                    <Ellipse Name="PositionThumb"
+                             Width="14" Height="14"
+                             Fill="{DynamicResource AccentBrush}"
+                             Stroke="White"
+                             StrokeThickness="2"
+                             Canvas.Top="3"/>
+                </Canvas>
+                <TextBlock Grid.Column="2" Text="{Binding TotalTime}" Width="40" TextAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+
+            
+            <Grid Width="280" HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <PathIcon Grid.Column="0" 
+                          Data="M 2 8 L 5 8 L 10 4 L 10 16 L 5 12 L 2 12 Z M 13 6 C 14 7 14 13 13 14"
+                          Width="20" Height="16" Margin="0,0,4,0"
+                          Foreground="{DynamicResource TextBrush}"/>
+
+                <Canvas Grid.Column="1" Height="20" Name="VolumeCanvas" Background="Transparent">
+                    <Rectangle Fill="{DynamicResource SeparatorBrush}" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="VolumeTrackBackground"/>
+                    <Rectangle Fill="{DynamicResource AccentBrush}" 
+                               Canvas.Top="8" Height="4" RadiusX="2" RadiusY="2"
+                               Name="VolumeProgressFill"/>
+                    <Ellipse Name="VolumeThumb"
+                             Width="14" Height="14"
+                             Fill="{DynamicResource AccentBrush}"
+                             Stroke="White"
+                             StrokeThickness="2"
+                             Canvas.Top="3"/>
+                </Canvas>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="4,0,0,0">
+
+                    <Button Command="{Binding TogglePlaybackModeCommand}" 
+                            Width="30" Height="30" Padding="0"
+                            Classes="primary">
+                        <Panel>
+                            <Path Data="M 3,4 L 7,8 L 3,12 M 8,4 L 12,8 L 8,12"
+                                  Width="16" Height="16"
+                                  Stroke="{DynamicResource TextBrush}"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"
+                                  IsVisible="{Binding IsNotRepeatOne}"/>
+
+                            <Path Data="M 3,2 L 12,2 A 2,2 0 0 1 14,4 L 14,6
+                                    M 10,0 L 12,2 L 10,4
+                                    M 13,14 L 4,14 A 2,2 0 0 1 2,12 L 2,10
+                                    M 6,12 L 4,14 L 6,16
+                                    M 7,7 L 8,6 L 8,10"
+                                  Width="16" Height="16"
+                                  Stroke="{DynamicResource TextBrush}"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"
+                                  IsVisible="{Binding IsRepeatOne}"/>
+                        </Panel>
+                    </Button>
+
+                    <Button Command="{Binding ToggleLoopCommand}" 
+                            Width="30" Height="30" Padding="0"
+                            IsEnabled="{Binding IsLoaded}"
+                            Classes="primary"
+                            Classes.LoopActive="{Binding IsLoopEnabled}">
+                        <PathIcon Data="M 1,3 L 4,3 L 4,4.5 L 2.5,4.5 L 2.5,11.5 L 4,11.5 L 4,13 L 1,13 Z
+                    M 15,3 L 12,3 L 12,4.5 L 13.5,4.5 L 13.5,11.5 L 12,11.5 L 12,13 L 15,13 Z
+                    M 5,5.5 L 9,5.5 L 9,4 L 11,6.5 L 9,9 L 9,7.5 L 5,7.5 Z
+                    M 11,10.5 L 7,10.5 L 7,12 L 5,9.5 L 7,7 L 7,8.5 L 11,8.5 Z"
+                                  Width="16" Height="16"
+                                  Foreground="{DynamicResource AccentTextBrush}"/>
+                    </Button>
+                    
+                    <Button Command="{Binding OpenEqualizerCommand}" 
+                            Width="30" Height="30" Padding="0"
+                            Classes="primary">
+                        <PathIcon Data="M 1,10 L 5,10 L 5,15 L 1,15 Z
+                M 6,5 L 10,5 L 10,15 L 6,15 Z
+                M 11,8 L 15,8 L 15,15 L 11,15 Z"
+                                  Width="16" Height="16"
+                                  Foreground="{DynamicResource AccentTextBrush}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </StackPanel>
     </StackPanel>
 </UserControl>

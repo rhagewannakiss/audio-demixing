@@ -10,15 +10,14 @@ namespace AudioStemPlayer.Core.Services;
 
 public class DialogService : IDialogService
 {
-    public async Task<bool> ShowConfirmationAsync(string title, string message)
+    public async Task<bool> ShowConfirmationAsync(string title, string message, bool showCancel)
     {
         var mainWindow = GetMainWindow();
-        if (mainWindow == null)
-            return false;
+        if (mainWindow == null) return false;
 
-        var dialog = new ConfirmationDialog(title, message);
+        var dialog = new ConfirmationDialog(title, message, showCancel);
         await dialog.ShowDialog<bool>(mainWindow);
-        return ((ConfirmationDialogViewModel)dialog.DataContext!).Result;
+        return (dialog.DataContext as ConfirmationDialogViewModel)?.Result ?? false;
     }
     
     public async Task ShowErrorAsync(string title, string message)
@@ -35,9 +34,10 @@ public class DialogService : IDialogService
     {
         var mainWindow = GetMainWindow();
         if (mainWindow == null) return null;
+
         var dialog = new PlaylistPickerDialog(playlists);
         await dialog.ShowDialog<bool>(mainWindow);
-        return ((PlaylistPickerViewModel)dialog.DataContext!).SelectedPlaylist;
+        return (dialog.DataContext as PlaylistPickerViewModel)?.SelectedPlaylist;
     }
     
     
@@ -53,7 +53,7 @@ public class DialogService : IDialogService
 
     private static Window? GetMainWindow()
     {
-        if (App.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (App.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             return desktop.MainWindow;
         return null;
     }

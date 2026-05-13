@@ -2,8 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="AudioStemPlayer.UI.Views.PlaylistsView"
              x:CompileBindings="False"
-             Background="{DynamicResource WindowBackgroundBrush}">
+             Background="{DynamicResource WindowBackgroundBrush}"
+             DragDrop.AllowDrop="True">
 
+    
+    
+    
     <Grid RowDefinitions="Auto, Auto, *">
         <Grid Grid.Row="0" Margin="0" Background="{DynamicResource WindowBackgroundBrush}">
             <Grid.ColumnDefinitions>
@@ -21,11 +25,14 @@
                 <Button Content="Delete" IsEnabled="{Binding HasSelectedPlaylist}" Classes="danger" Command="{Binding DeletePlaylistCommand}" Padding="15,5"/>
             </StackPanel>
         </Grid>
-
+        
+        
+        
+        
+        
         <Rectangle Grid.Row="1" Height="1" Fill="{DynamicResource SeparatorBrush}" HorizontalAlignment="Stretch"/>
 
         <Grid Grid.Row="2" ColumnDefinitions="2*, 3*" Margin="20,10,20,20">
-
             <Border Grid.Column="0"
                     Background="{DynamicResource TabsBackgroundBrush}"
                     CornerRadius="6"
@@ -48,7 +55,7 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
             </Border>
-            
+
             <Border Grid.Column="1"
                     Background="{DynamicResource TabsBackgroundBrush}"
                     CornerRadius="6"
@@ -66,7 +73,8 @@
                                    IsVisible="{Binding HasSelectedPlaylist}"/>
 
                         <ItemsControl ItemsSource="{Binding PlaylistTracks}"
-                                      IsVisible="{Binding HasSelectedPlaylist}">
+                                      IsVisible="{Binding HasSelectedPlaylist}"
+                                      Name="TracksItemsControl">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,2">
